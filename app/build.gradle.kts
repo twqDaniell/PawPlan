@@ -79,4 +79,5 @@ dependencies {
     implementation("androidx.navigation:navigation-fragment-ktx:2.6.0")
     implementation("androidx.navigation:navigation-ui-ktx:2.6.0")
     implementation("androidx.navigation:navigation-compose:2.7.3")
+    implementation("io.coil-kt:coil-compose:2.4.0")
 }

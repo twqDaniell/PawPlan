@@ -1,4 +1,4 @@
-package com.example.pawplan
+package com.example.pawplan.profile
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -13,8 +13,8 @@ fun ProfileScreen() {
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        Text(text = "Profile Screen", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Welcome to your profile page!")
+        PetDetailsSection()
+        ProfileActionsSection()
+        MemoriesSection()
     }
 }
