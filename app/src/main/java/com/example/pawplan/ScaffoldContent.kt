@@ -23,7 +23,7 @@ fun BarsWithScaffold() {
 
     Scaffold(
         topBar = { SmallTopBar() }, // Reuse TopAppBar from another file
-        bottomBar = { NavigationBarPawPlan() } // Reuse NavigationBar from another file
+        bottomBar = { NavigationBarPawPlan(navController) } // Reuse NavigationBar from another file
     ) { innerPadding ->
         NavHost(
             navController = navController,

@@ -20,9 +20,10 @@ import androidx.compose.material.icons.outlined.Policy
 import androidx.compose.material.icons.outlined.Vaccines
 import androidx.compose.material3.NavigationBarItemColors
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.navigation.NavHostController
 
 @Composable
-fun NavigationBarPawPlan() {
+fun NavigationBarPawPlan(navController: NavHostController) {
     var selectedItem by remember { mutableStateOf(0) }
     val barItems = listOf(
         BarItem(
@@ -60,7 +61,14 @@ fun NavigationBarPawPlan() {
 
             NavigationBarItem(
                 selected = selected,
-                onClick = { selectedItem = index },
+                onClick = {
+                    selectedItem = index
+                    navController.navigate(barItem.route) {
+                        launchSingleTop = true
+                        restoreState = true
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    }
+                },
                 icon = {
                     Icon(
                         imageVector = if (selected) barItem.selectedIcon else barItem.unselectedIcon,
