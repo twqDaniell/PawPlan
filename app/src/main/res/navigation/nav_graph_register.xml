@@ -71,9 +71,20 @@
             android:id="@+id/action_registerDetailsFragment_to_registerPetBreedFragment"
             app:destination="@id/registerPetBreedFragment" />
 
-        <!--        <action-->
-        <!--            android:id="@+id/action_registerPetBreedFragment_to_registerPetDetailsFragment"-->
-        <!--            app:destination="@id/registerPetDetailsFragment" />-->
+        <action
+            android:id="@+id/action_registerDetailsFragment_to_registerPhotoFragment"
+            app:destination="@id/registerPhotoFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerPhotoFragment"
+        android:name="com.example.pawplan.RegisterPhotoFragment"
+        android:label="Register Photo" >
+
+        <action
+            android:id="@+id/action_registerPhotoFragment_to_registerDetailsFragment"
+            app:destination="@id/registerDetailsFragment" />
 
     </fragment>
 
