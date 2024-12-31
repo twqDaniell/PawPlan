@@ -20,6 +20,61 @@
     <fragment
         android:id="@+id/registerPetTypeFragment"
         android:name="com.example.pawplan.RegisterPetTypeFragment"
-        android:label="Register Pet Type" />
+        android:label="Register Pet Type" >
+
+        <action
+            android:id="@+id/action_registerPetTypeFragment_to_registerPetNameFragment"
+            app:destination="@id/registerPetNameFragment" />
+
+        <action
+            android:id="@+id/action_registerPetTypeFragment_to_registerNameFragment"
+            app:destination="@id/registerName" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerPetNameFragment"
+        android:name="com.example.pawplan.RegisterPetNameFragment"
+        android:label="Register Pet Name" >
+
+        <action
+            android:id="@+id/action_registerPetNameFragment_to_registerPetTypeFragment"
+            app:destination="@id/registerPetTypeFragment" />
+
+        <action
+            android:id="@+id/action_registerPetNameFragment_to_registerPetBreedFragment"
+            app:destination="@id/registerPetBreedFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerPetBreedFragment"
+        android:name="com.example.pawplan.RegisterPetBreedFragment"
+        android:label="Register Pet Breed" >
+
+        <action
+            android:id="@+id/action_registerPetBreedFragment_to_registerPetNameFragment"
+            app:destination="@id/registerPetNameFragment" />
+
+        <action
+            android:id="@+id/action_registerPetBreedFragment_to_registerPetDetailsFragment"
+            app:destination="@id/registerDetailsFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerDetailsFragment"
+        android:name="com.example.pawplan.RegisterDetailsFragment"
+        android:label="Register Details" >
+
+        <action
+            android:id="@+id/action_registerDetailsFragment_to_registerPetBreedFragment"
+            app:destination="@id/registerPetBreedFragment" />
+
+        <!--        <action-->
+        <!--            android:id="@+id/action_registerPetBreedFragment_to_registerPetDetailsFragment"-->
+        <!--            app:destination="@id/registerPetDetailsFragment" />-->
+
+    </fragment>
 
 </navigation>

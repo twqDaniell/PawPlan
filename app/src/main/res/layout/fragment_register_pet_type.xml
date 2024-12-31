@@ -8,6 +8,21 @@
     android:layout_height="match_parent"
     tools:context=".RegisterPetTypeFragment">
 
+    <Button
+        android:id="@+id/backButton"
+        style="@style/Widget.Material3.Button.OutlinedButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:backgroundTint="#FFFFFF"
+        android:text="Back"
+        android:textColor="#B3839A"
+        android:textSize="15dp"
+        app:iconTint="@color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <androidx.cardview.widget.CardView
         android:layout_width="380dp"
         android:layout_height="250dp"

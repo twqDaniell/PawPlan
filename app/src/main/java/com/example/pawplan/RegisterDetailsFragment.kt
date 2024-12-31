@@ -8,17 +8,17 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.navigation.fragment.findNavController
 
-class RegisterPetTypeFragment : Fragment() {
+class RegisterDetailsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        val view = inflater.inflate(R.layout.fragment_register_pet_type, container, false)
+        val view = inflater.inflate(R.layout.fragment_register_details, container, false)
 
-//        view.findViewById<Button>(R.id.sendCodeButton)?.setOnClickListener {
-//            findNavController().navigate(R.id.action_signInFormFragment_to_signInCodeFragment)
-//        }
+        view.findViewById<Button>(R.id.backButton)?.setOnClickListener {
+            findNavController().navigate(R.id.action_registerDetailsFragment_to_registerPetBreedFragment)
+        }
 
         return view
     }
