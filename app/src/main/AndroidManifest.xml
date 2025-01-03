@@ -13,8 +13,13 @@
         android:theme="@style/Theme.PawPlan"
         tools:targetApi="31">
         <activity
-            android:name=".RegisterActivity"
+            android:name=".register.RegisterActivity"
             android:exported="true" >
+
+        </activity>
+        <activity
+            android:name=".login.SignInActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -22,13 +27,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SignInActivity"
-            android:exported="true">
+            android:name=".MainActivity"
+            android:exported="true" >
 
         </activity>
-        <activity
-            android:name=".MainActivity"
-            android:exported="true" />
+
     </application>
 
 </manifest>
