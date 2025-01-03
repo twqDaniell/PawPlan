@@ -8,9 +8,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.pawplan.foods.FoodScreen
 import com.example.pawplan.health.HealthScreen
 import com.example.pawplan.missing.MissingPetsScreenPreview
-import com.example.pawplan.missing.MissingScreen
 import com.example.pawplan.profile.ProfileScreen
 
 @Composable
@@ -38,7 +38,10 @@ fun BarsWithScaffold() {
                 MissingPetsScreenPreview() // Your Missing Screen Composable
             }
             composable("food") {
-                FoodScreen() // Your Food Screen Composable
+                FoodScreen(
+                    foodImageUrl = "https://via.placeholder.com/300", // Replace with actual image URL or logic
+                    allergies = listOf("Artificial Additives", "Beef", "Soy"),
+                ) // Your Food Screen Composable
             }
         }
     }
