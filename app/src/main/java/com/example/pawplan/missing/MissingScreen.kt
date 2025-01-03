@@ -38,8 +38,6 @@ fun MissingScreen(pets: List<PetPost>) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Scrollable List of Missing Pets
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(16.dp),
