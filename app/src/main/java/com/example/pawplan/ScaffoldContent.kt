@@ -9,6 +9,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.pawplan.health.HealthScreen
+import com.example.pawplan.missing.MissingPetsScreenPreview
+import com.example.pawplan.missing.MissingScreen
 import com.example.pawplan.profile.ProfileScreen
 
 @Composable
@@ -33,7 +35,7 @@ fun BarsWithScaffold() {
                 HealthScreen() // Your Health Screen Composable
             }
             composable("missing") {
-                MissingScreen() // Your Missing Screen Composable
+                MissingPetsScreenPreview() // Your Missing Screen Composable
             }
             composable("food") {
                 FoodScreen() // Your Food Screen Composable
