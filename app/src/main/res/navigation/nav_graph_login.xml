@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/signInFormFragment"
-        android:name="com.example.pawplan.SignInFormFragment"
+        android:name="com.example.pawplan.login.SignInFormFragment"
         android:label="Sign In Form"
         tools:layout="@layout/fragment_sign_in_form">
 
@@ -19,7 +19,7 @@
 
     <fragment
         android:id="@+id/signInCodeFragment"
-        android:name="com.example.pawplan.SignInCodeFragment"
+        android:name="com.example.pawplan.login.SignInCodeFragment"
         android:label="Sign In Code" />
 
 </navigation>

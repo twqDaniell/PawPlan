@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/registerName"
-        android:name="com.example.pawplan.RegisterNameFragment"
+        android:name="com.example.pawplan.register.RegisterNameFragment"
         android:label="Register Name"
         tools:layout="@layout/fragment_register_name">
 
@@ -19,7 +19,7 @@
 
     <fragment
         android:id="@+id/registerPetTypeFragment"
-        android:name="com.example.pawplan.RegisterPetTypeFragment"
+        android:name="com.example.pawplan.register.RegisterPetTypeFragment"
         android:label="Register Pet Type" >
 
         <action
@@ -34,7 +34,7 @@
 
     <fragment
         android:id="@+id/registerPetNameFragment"
-        android:name="com.example.pawplan.RegisterPetNameFragment"
+        android:name="com.example.pawplan.register.RegisterPetNameFragment"
         android:label="Register Pet Name" >
 
         <action
@@ -49,7 +49,7 @@
 
     <fragment
         android:id="@+id/registerPetBreedFragment"
-        android:name="com.example.pawplan.RegisterPetBreedFragment"
+        android:name="com.example.pawplan.register.RegisterPetBreedFragment"
         android:label="Register Pet Breed" >
 
         <action
@@ -64,7 +64,7 @@
 
     <fragment
         android:id="@+id/registerDetailsFragment"
-        android:name="com.example.pawplan.RegisterDetailsFragment"
+        android:name="com.example.pawplan.register.RegisterDetailsFragment"
         android:label="Register Details" >
 
         <action
@@ -79,7 +79,7 @@
 
     <fragment
         android:id="@+id/registerPhotoFragment"
-        android:name="com.example.pawplan.RegisterPhotoFragment"
+        android:name="com.example.pawplan.register.RegisterPhotoFragment"
         android:label="Register Photo" >
 
         <action
