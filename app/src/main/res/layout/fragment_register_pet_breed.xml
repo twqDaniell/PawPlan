@@ -50,7 +50,7 @@
             app:hintTextColor="#969DBA">
 
             <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/autoCompleteTextViewGender"
+                android:id="@+id/breedAutocomplete"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Cat breed"
@@ -60,7 +60,7 @@
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:id="@+id/textInputLayoutPetName"
+            android:id="@+id/birthDateInputLayout"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="125dp"
@@ -74,9 +74,10 @@
             app:hintTextColor="#969DBA">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/textInputEditTextPetName"
+                android:id="@+id/birthDateInputEdit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:focusable="false"
                 android:hint="Birth Date"
                 android:padding="12dp"
                 android:textSize="16sp" />

@@ -15,7 +15,9 @@ import com.example.pawplan.R
 import com.google.android.material.textfield.TextInputEditText
 import android.widget.Button
 import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
 import com.example.pawplan.MainActivity
+import com.example.pawplan.models.RegistrationViewModel
 import com.example.pawplan.register.RegisterActivity
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.auth.FirebaseAuth
@@ -25,6 +27,7 @@ private lateinit var auth: FirebaseAuth
 private lateinit var db: FirebaseFirestore
 
 class SignInCodeFragment : Fragment() {
+    private lateinit var viewModel: RegistrationViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -119,7 +122,15 @@ class SignInCodeFragment : Fragment() {
                 } else {
                     // User does not exist
                     Log.d("Firestore", "No user found with phone number: $phoneNumber")
-                    startActivity(Intent(requireContext(), RegisterActivity::class.java))
+                    viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
+                    viewModel.phoneNumber = phoneNumber
+                    Log.d("SignInCodeFragment", "Phone number saved in ViewModel: ${viewModel.phoneNumber}")
+
+                    val intent = Intent(requireContext(), RegisterActivity::class.java).apply {
+                        putExtra("phoneNumber", phoneNumber) // Pass the phone number
+                    }
+
+                    startActivity(intent)
                     requireActivity().finish()
                 }
             }
