@@ -2,19 +2,38 @@ package com.example.pawplan.health
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.tasks.await
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
-fun VaccinationRecordsSection() {
+fun VaccinationRecordsSection(vetVisits: List<VetVisit>, onAddVisit: (VetVisit) -> Unit, petId: String) {
+    var showDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -26,22 +45,40 @@ fun VaccinationRecordsSection() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Vaccination Records",
+                text = "Vet Visits",
                 style = MaterialTheme.typography.titleMedium
             )
             OutlinedButton(
-                onClick = { /* Add vaccination logic */ },
+                onClick = { showDialog = true  },
+                contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp) // Ensure consistent button size
             ) {
-                Text("+", style = MaterialTheme.typography.bodyLarge)
+                Text("+", style = MaterialTheme.typography.bodyMedium)
             }
         }
 
         // Vaccination List
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            VaccinationRecordItem("Rabies Vaccination", "01/03/2020")
-            VaccinationRecordItem("Bordetella Vaccination", "30/05/2021")
-            VaccinationRecordItem("Leptospirosis Vaccination", "11/12/2022")
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxSize() // Ensure it takes available space
+        ) {
+            items(vetVisits) { visit ->
+                VaccinationRecordItem(
+                    visit.topic,
+                    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(visit.visitDate)
+                )
+            }
+        }
+
+        if (showDialog) {
+            AddVisitPopup(
+                onDismiss = { showDialog = false },
+                onAdd = { newVisit ->
+                    onAddVisit(newVisit)
+                    showDialog = false
+                },
+                petId = petId
+            )
         }
     }
 }

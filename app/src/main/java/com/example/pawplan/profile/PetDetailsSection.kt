@@ -45,7 +45,7 @@ fun PetDetailsSection(mainViewModel: MainViewModel = viewModel()) {
     ) {
         // Pet Image
         AsyncImage(
-            model = petDetails?.pictureUrl ?: R.drawable.placeholder,
+            model = petDetails?.picture ?: R.drawable.placeholder,
             contentDescription = "Pet Image",
             modifier = Modifier
                 .size(120.dp)

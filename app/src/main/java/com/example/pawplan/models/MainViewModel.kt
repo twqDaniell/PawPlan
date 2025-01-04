@@ -24,7 +24,8 @@ data class PetDetails(
     val petColor: String = "",
     val petBirthDate: Date,
     val petAdoptionDate: Date,
-    val pictureUrl: String = ""
+    val picture: String = "",
+    val vetId: String = ""
 )
 
 class MainViewModel : ViewModel() {
@@ -70,7 +71,8 @@ class MainViewModel : ViewModel() {
                         petColor = firstPet.getString("petColor") ?: "Unknown",
                         petBirthDate = firstPet.getDate("petBirthDate") ?: Date(0), // Fallback to epoch
                         petAdoptionDate = firstPet.getDate("petAdoptionDate") ?: Date(0),
-                        pictureUrl = firstPet.getString("picture") ?: ""
+                        picture = firstPet.getString("picture") ?: "",
+                        vetId = firstPet.getString("vetId") ?: "Unknown"
                     )
                 }
             }

@@ -18,12 +18,38 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.pawplan.models.PetDetails
+import com.example.pawplan.models.UserDetails
+import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+data class VetDetails(
+    val vetId: String = "",
+    val vetName: String = "",
+    val phoneNumber: String = ""
+)
+
+private val _vetDetails = MutableStateFlow<VetDetails?>(null)
+val vetDetails: StateFlow<VetDetails?> get() = _vetDetails
 
 @Composable
-fun VetInfoSection() {
+fun VetInfoSection(vetId: String, lastVisit: VetVisit, nextVisit: VetVisit, numberOfVisits: Int, weight: Int) {
+    LaunchedEffect(vetId) {
+        fetchVetDetails(vetId)
+    }
+
+    val vetDetails by vetDetails.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -47,7 +73,7 @@ fun VetInfoSection() {
                     )
                 )
                 Text(
-                    text = "Dr. Rivin Jayasuriya",
+                    text = vetDetails?.vetName ?: "Unknown name",
                     style = MaterialTheme.typography.bodyLarge
                 )
 
@@ -67,7 +93,11 @@ fun VetInfoSection() {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "01/01/2024",
+                        text = if (lastVisit.topic == "-") {
+                            "-"
+                        } else {
+                            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(lastVisit.visitDate)
+                        },
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -88,7 +118,7 @@ fun VetInfoSection() {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "20 kg",
+                        text = "${weight}",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -117,7 +147,7 @@ fun VetInfoSection() {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "070-4012965",
+                        text = vetDetails?.phoneNumber ?: "Unknown number",
                         style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.primary)
                     )
                 }
@@ -138,14 +168,18 @@ fun VetInfoSection() {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "01/03/2024",
+                        text = if (nextVisit.topic == "-") {
+                            "-"
+                        } else {
+                            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(nextVisit.visitDate)
+                        },
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
 
                 // Total operations done
                 Text(
-                    text = "Total operations done",
+                    text = "Number of visits",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
@@ -159,7 +193,7 @@ fun VetInfoSection() {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "1",
+                        text = "${numberOfVisits}",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -168,5 +202,21 @@ fun VetInfoSection() {
     }
 }
 
-
+fun fetchVetDetails(vetId: String) {
+    FirebaseFirestore.getInstance().collection("vets").document(vetId)
+        .get()
+        .addOnSuccessListener { document ->
+            if (document.exists()) {
+                val vetName = document.getString("vetName") ?: "Unknown"
+                val phoneNumber = document.getString("phoneNumber") ?: "Unknown"
+                // Use the backing property (_vetDetails) to update the state
+                _vetDetails.value = VetDetails(vetId, vetName, phoneNumber)
+            } else {
+                println("Vet document not found")
+            }
+        }
+        .addOnFailureListener { exception ->
+            println("Error fetching vet details: ${exception.message}")
+        }
+}
 

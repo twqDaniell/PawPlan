@@ -18,7 +18,7 @@ import coil.request.ImageRequest
 import com.example.pawplan.R
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(petName: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -37,7 +37,7 @@ fun HeaderSection() {
 
             // Subtitle
             Text(
-                text = "Stay in touch with Cheese's health records.",
+                text = "Stay in touch with ${petName}'s health records.",
                 style = MaterialTheme.typography.bodyMedium
             )
         }
@@ -45,11 +45,11 @@ fun HeaderSection() {
         // Illustration/Image
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(R.drawable.placeholder) // Replace with the actual illustration URL
+                .data(R.drawable.health_illustration) // Replace with the actual illustration URL
                 .crossfade(true)
                 .build(),
             contentDescription = "Health Illustration",
-            modifier = Modifier.size(80.dp)
+            modifier = Modifier.size(120.dp)
         )
     }
 }
