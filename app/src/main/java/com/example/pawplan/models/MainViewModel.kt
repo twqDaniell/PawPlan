@@ -25,7 +25,8 @@ data class PetDetails(
     val petBirthDate: Date,
     val petAdoptionDate: Date,
     val picture: String = "",
-    val vetId: String = ""
+    val vetId: String = "",
+    val foodImage: String = ""
 )
 
 class MainViewModel : ViewModel() {
@@ -72,7 +73,8 @@ class MainViewModel : ViewModel() {
                         petBirthDate = firstPet.getDate("petBirthDate") ?: Date(0), // Fallback to epoch
                         petAdoptionDate = firstPet.getDate("petAdoptionDate") ?: Date(0),
                         picture = firstPet.getString("picture") ?: "",
-                        vetId = firstPet.getString("vetId") ?: "Unknown"
+                        vetId = firstPet.getString("vetId") ?: "Unknown",
+                        foodImage = firstPet.getString("foodImage") ?: "Unknown"
                     )
                 }
             }
