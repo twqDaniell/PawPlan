@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph_login"
+    app:startDestination="@id/signInFormFragment">
+
+    <fragment
+        android:id="@+id/signInFormFragment"
+        android:name="com.example.pawplan.login.SignInFormFragment"
+        android:label="Sign In Form"
+        tools:layout="@layout/fragment_sign_in_form">
+
+        <action
+            android:id="@+id/action_signInFormFragment_to_signInCodeFragment"
+            app:destination="@id/signInCodeFragment" />
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/signInCodeFragment"
+        android:name="com.example.pawplan.login.SignInCodeFragment"
+        android:label="Sign In Code" />
+
+</navigation>
