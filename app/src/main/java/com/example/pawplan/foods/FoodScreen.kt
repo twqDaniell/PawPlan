@@ -35,7 +35,7 @@ fun FoodScreen(
     mainViewModel: MainViewModel = viewModel()
 ) {
     val petDetails by mainViewModel.petDetails.collectAsState()
-    var foodImageUrl by remember { mutableStateOf<String?>(null) }
+    var foodImageUrl = petDetails?.foodImage ?: ""
 
     Column(
         modifier = Modifier

@@ -11,22 +11,14 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.pawplan.health.VetVisit
-import com.example.pawplan.health.fetchVetVisitsForPet
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.Date
 
 data class Allergy(
     val petId: String = "",
@@ -39,10 +31,18 @@ fun FoodAllergiesSection(
     petId: String
 ) {
     val allergies = remember { mutableStateOf<List<Allergy>>(emptyList()) }
+    var showDialog by remember { mutableStateOf(false) }
+    var newAllergyName by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
 
+    // Fetch allergies when the petId changes
     LaunchedEffect(petId) {
-        val petAllergies = fetchAllergiesForPet(petId)
-        allergies.value = petAllergies
+        try {
+            val petAllergies = fetchAllergiesForPet(petId) // Call the suspend function
+            allergies.value = petAllergies
+        } catch (e: Exception) {
+            Log.e("FoodAllergiesSection", "Error fetching allergies: ${e.message}")
+        }
     }
 
     // Food Allergies Section
@@ -59,7 +59,7 @@ fun FoodAllergiesSection(
                 text = "${petName}’s Food Allergies",
                 style = MaterialTheme.typography.titleMedium
             )
-            IconButton(onClick = { /* Add allergy functionality */ }) {
+            IconButton(onClick = { showDialog = true }) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Allergy",
@@ -94,7 +94,56 @@ fun FoodAllergiesSection(
             }
         }
     }
+
+    // Popup for Adding Allergy
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(text = "Add Allergy") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = newAllergyName,
+                        onValueChange = { newAllergyName = it },
+                        label = { Text("Allergy Name") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        // Launch a coroutine for saving the allergy
+                        coroutineScope.launch {
+                            try {
+                                saveAllergyToFirestore(
+                                    Allergy(petId = petId, allergyName = newAllergyName)
+                                )
+                                showDialog = false
+                                newAllergyName = ""
+
+                                // Reload allergies after adding
+                                val updatedAllergies = fetchAllergiesForPet(petId)
+                                allergies.value = updatedAllergies
+                            } catch (e: Exception) {
+                                Log.e("FoodAllergiesSection", "Error saving allergy: ${e.message}")
+                            }
+                        }
+                    }
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
+
 
 suspend fun fetchAllergiesForPet(petId: String): List<Allergy> {
     val firestore = FirebaseFirestore.getInstance()
@@ -104,12 +153,24 @@ suspend fun fetchAllergiesForPet(petId: String): List<Allergy> {
             .get()
             .await() // Wait for the query to complete
 
-        // Map the documents to a list of VetVisit objects
+        // Map the documents to a list of Allergy objects
         snapshot.documents.mapNotNull { document ->
             document.toObject(Allergy::class.java)
         }
     } catch (e: Exception) {
-        Log.e("sss","Error fetching allergies: ${e.message}")
+        Log.e("FoodAllergiesSection", "Error fetching allergies: ${e.message}")
         emptyList()
+    }
+}
+
+suspend fun saveAllergyToFirestore(allergy: Allergy) {
+    val firestore = FirebaseFirestore.getInstance()
+    try {
+        firestore.collection("allergies")
+            .add(allergy) // Save the allergy
+            .await()
+        Log.d("FoodAllergiesSection", "Allergy saved successfully")
+    } catch (e: Exception) {
+        Log.e("FoodAllergiesSection", "Error saving allergy: ${e.message}")
     }
 }
