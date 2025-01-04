@@ -44,7 +44,12 @@ fun HealthScreen(mainViewModel: MainViewModel = viewModel()) {
 
         VetInfoSection(petDetails?.vetId ?: "Unknown", findLastVisit(vetVisits.value), findNextVisit(vetVisits.value), vetVisits.value.size, petDetails?.petWeight ?: 0)
 
-        VaccinationRecordsSection(vetVisits.value)
+        VaccinationRecordsSection(
+            vetVisits.value,
+            onAddVisit = { newVisit ->
+            vetVisits.value = vetVisits.value + newVisit },
+            petDetails?.petId ?: "Unknown"
+            )
     }
 }
 

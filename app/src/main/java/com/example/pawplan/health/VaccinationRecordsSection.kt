@@ -18,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -30,7 +31,9 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun VaccinationRecordsSection(vetVisits: List<VetVisit>) {
+fun VaccinationRecordsSection(vetVisits: List<VetVisit>, onAddVisit: (VetVisit) -> Unit, petId: String) {
+    var showDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -46,7 +49,7 @@ fun VaccinationRecordsSection(vetVisits: List<VetVisit>) {
                 style = MaterialTheme.typography.titleMedium
             )
             OutlinedButton(
-                onClick = { /* Add vaccination logic */ },
+                onClick = { showDialog = true  },
                 contentPadding = PaddingValues(0.dp),
                 modifier = Modifier.size(36.dp) // Ensure consistent button size
             ) {
@@ -67,6 +70,16 @@ fun VaccinationRecordsSection(vetVisits: List<VetVisit>) {
             }
         }
 
+        if (showDialog) {
+            AddVisitPopup(
+                onDismiss = { showDialog = false },
+                onAdd = { newVisit ->
+                    onAddVisit(newVisit)
+                    showDialog = false
+                },
+                petId = petId
+            )
+        }
     }
 }
 
