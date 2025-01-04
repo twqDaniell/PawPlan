@@ -45,7 +45,7 @@ fun HeaderSection() {
         // Illustration/Image
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(R.drawable.logo) // Replace with the actual illustration URL
+                .data(R.drawable.placeholder) // Replace with the actual illustration URL
                 .crossfade(true)
                 .build(),
             contentDescription = "Health Illustration",
