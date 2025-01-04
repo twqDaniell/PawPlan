@@ -70,7 +70,7 @@ fun FoodScreen(
         )
 
         // Allergies Section
-        FoodAllergiesSection(allergies)
+        FoodAllergiesSection(petDetails?.petName ?: "Unknown", petDetails?.petId ?: "Unknown")
     }
 }
 
