@@ -14,9 +14,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Composable
-fun MissingPetCard(pet: PetPost) {
+fun MissingPetCard(pet: MissingPetDetails) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -27,11 +29,11 @@ fun MissingPetCard(pet: PetPost) {
     ) {
         // Pet Image
         AsyncImage(
-            model = pet.imageUrl,
-            contentDescription = "Image of ${pet.name}",
+            model = pet.picture,
+            contentDescription = "Image of ${pet.petName}",
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp)
+                .height(220.dp)
                 .clip(MaterialTheme.shapes.medium)
         )
 
@@ -39,7 +41,7 @@ fun MissingPetCard(pet: PetPost) {
 
         // Pet Name
         Text(
-            text = pet.name,
+            text = pet.petName,
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary
         )
@@ -48,7 +50,13 @@ fun MissingPetCard(pet: PetPost) {
 
         // Last Seen Info (Using a method from the PetPost class)
         Text(
-            text = pet.getFormattedLastSeen(),
+            text = pet.description,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Text(
+            text = "${pet.petColor} ${pet.petBreed} ${pet.petType}",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -56,7 +64,14 @@ fun MissingPetCard(pet: PetPost) {
         // Owner Info (Using a method from the PetPost class)
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = pet.getOwnerInfo(),
+            text = "${pet.ownerName} ${pet.phoneNumber}",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(pet.lostDate),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface
         )
