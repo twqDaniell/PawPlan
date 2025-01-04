@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 @Composable
-fun MemoriesSection(petId: String) {
+fun MemoriesSection(petId: String, petName: String) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -70,7 +70,7 @@ fun MemoriesSection(petId: String) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Cheese's Memories",
+                text = "${petName}'s Memories",
                 style = MaterialTheme.typography.headlineSmall
             )
 

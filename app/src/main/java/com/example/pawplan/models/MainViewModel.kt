@@ -1,11 +1,15 @@
 package com.example.pawplan.models
 
 import androidx.lifecycle.ViewModel
+import com.example.pawplan.externalAPI.RetrofitClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.Date
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 data class UserDetails(
     val userName: String = "",
@@ -29,6 +33,9 @@ class MainViewModel : ViewModel() {
 
     private val _petDetails = MutableStateFlow<PetDetails?>(null)
     val petDetails: StateFlow<PetDetails?> get() = _petDetails
+
+    private val _breeds = MutableStateFlow<List<String>>(emptyList())
+    val breeds: StateFlow<List<String>> get() = _breeds
 
     init {
         fetchUserAndPetDetails()
@@ -67,5 +74,37 @@ class MainViewModel : ViewModel() {
                     )
                 }
             }
+    }
+
+    fun updatePetDetails(updatedDetails: PetDetails) {
+        val firestore = FirebaseFirestore.getInstance()
+        firestore.collection("pets").document(updatedDetails.petId)
+            .set(updatedDetails)
+            .addOnSuccessListener {
+                _petDetails.value = updatedDetails
+            }
+            .addOnFailureListener { e ->
+                // Handle error (e.g., log or show a message)
+            }
+    }
+
+    fun fetchBreeds(onBreedsFetched: (List<String>) -> Unit) {
+        val api = RetrofitClient.instance
+        api.getBreeds().enqueue(object : Callback<BreedsResponse> {
+            override fun onResponse(call: Call<BreedsResponse>, response: Response<BreedsResponse>) {
+                if (response.isSuccessful) {
+                    val breedsMap = response.body()?.message ?: emptyMap()
+                    val breedsList = breedsMap.keys.toList()
+                    _breeds.value = breedsList
+                    onBreedsFetched(breedsList)
+                } else {
+                    onBreedsFetched(emptyList())
+                }
+            }
+
+            override fun onFailure(call: Call<BreedsResponse>, t: Throwable) {
+                onBreedsFetched(emptyList())
+            }
+        })
     }
 }

@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pawplan.models.MainViewModel
 import androidx.compose.runtime.getValue
+import com.example.pawplan.models.PetDetails
 
 @Composable
 fun ProfileScreen(mainViewModel: MainViewModel = viewModel()) {
@@ -20,7 +21,18 @@ fun ProfileScreen(mainViewModel: MainViewModel = viewModel()) {
             .padding(16.dp)
     ) {
         PetDetailsSection(mainViewModel)
-        ProfileActionsSection()
-        MemoriesSection(petDetails?.petId ?: "UnknownPetId")
+        if (petDetails != null) {
+            ProfileActionsSection(
+                currentPetDetails = petDetails!!,
+                onUpdatePetDetails = { updatedDetails ->
+                    mainViewModel.updatePetDetails(updatedDetails)
+                },
+                fetchBreeds = { onBreedsFetched ->
+                    mainViewModel.fetchBreeds(onBreedsFetched)
+                }
+            )
+        }
+        MemoriesSection(petDetails?.petId ?: "UnknownPetId", petDetails?.petName ?: "Unknown name")
     }
 }
+
