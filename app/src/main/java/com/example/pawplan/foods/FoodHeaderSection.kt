@@ -8,7 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun FoodHeaderSection() {
+fun FoodHeaderSection(petName: String) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -18,7 +18,7 @@ fun FoodHeaderSection() {
             color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = "Keep a picture here\nCheese’s food is:",
+            text = "Keep a picture here\n${petName}’s food is:",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurface
         )

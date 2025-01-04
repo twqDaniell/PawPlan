@@ -8,18 +8,25 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.pawplan.models.MainViewModel
 
 @Composable
 fun FoodScreen(
     foodImageUrl: String?,
-    allergies: List<String>
+    allergies: List<String>,
+    mainViewModel: MainViewModel = viewModel()
 ) {
+    val petDetails by mainViewModel.petDetails.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -27,7 +34,7 @@ fun FoodScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Help Text Section
-        FoodHeaderSection()
+        FoodHeaderSection(petDetails?.petName ?: "Unknown")
 
         // Food Image Section
         FoodImageSection(foodImageUrl)
