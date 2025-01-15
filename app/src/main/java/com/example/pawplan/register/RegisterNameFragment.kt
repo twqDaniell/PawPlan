@@ -1,6 +1,8 @@
 package com.example.pawplan.register
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -24,11 +26,26 @@ class RegisterNameFragment : Fragment() {
         viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
 
         val nameInput = view.findViewById<TextInputEditText>(R.id.nameInput)
+        val nextButton = view.findViewById<Button>(R.id.nameNextButton)
 
-        view.findViewById<Button>(R.id.nameNextButton)?.setOnClickListener {
+        nextButton.setOnClickListener {
             viewModel.userName = nameInput.text.toString()
             findNavController().navigate(R.id.action_registerNameFragment_to_registerPetTypeFragment)
         }
+
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val isFormFilled = nameInput.text.toString().isNotEmpty()
+                nextButton.isEnabled = isFormFilled
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+            }
+        }
+
+        nameInput.addTextChangedListener(textWatcher)
 
         return view
     }

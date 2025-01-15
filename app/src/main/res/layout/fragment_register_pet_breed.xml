@@ -120,6 +120,7 @@
                 android:fontFamily="@font/latobold"
                 android:backgroundTint="#E4AEC6"
                 android:textSize="17dp"
+                android:enabled="false"
                 android:text="Next" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

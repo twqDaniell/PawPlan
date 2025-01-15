@@ -3,6 +3,8 @@ package com.example.pawplan.login
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -36,6 +38,20 @@ class SignInFormFragment : Fragment() {
         val phoneNumberInput = view.findViewById<TextInputEditText>(R.id.phoneNumberInput)
         val sendCodeButton = view.findViewById<Button>(R.id.sendCodeButton)
         progressBar = view.findViewById(R.id.progressBar)
+
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val isFormFilled = phoneNumberInput.text.toString().isNotEmpty()
+                sendCodeButton.isEnabled = isFormFilled
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+            }
+        }
+
+        phoneNumberInput.addTextChangedListener(textWatcher)
 
         auth = FirebaseAuth.getInstance()
 

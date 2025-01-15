@@ -90,6 +90,7 @@
             android:fontFamily="@font/latobold"
             android:layout_marginTop="160dp"
             android:backgroundTint="#E4AEC6"
+            android:enabled="false"
             android:text="Send Code" />
 
         <ProgressBar

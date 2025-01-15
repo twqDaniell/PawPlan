@@ -142,6 +142,7 @@
                 android:backgroundTint="#E4AEC6"
                 android:fontFamily="@font/latobold"
                 android:textSize="17dp"
+                android:enabled="false"
                 android:text="Next" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

@@ -54,6 +54,30 @@ class SignInCodeFragment : Fragment() {
         val verificationId = arguments?.getString("verificationId")
         val verifyButton = view.findViewById<Button>(R.id.button2)
 
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val isFormFilled = codeInputs[0].text.toString().isNotEmpty() &&
+                        codeInputs[1].text.toString().isNotEmpty() &&
+                        codeInputs[2].text.toString().isNotEmpty() &&
+                        codeInputs[3].text.toString().isNotEmpty() &&
+                        codeInputs[4].text.toString().isNotEmpty() &&
+                        codeInputs[5].text.toString().isNotEmpty()
+                verifyButton.isEnabled = isFormFilled
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+            }
+        }
+
+        codeInputs[0].addTextChangedListener(textWatcher)
+        codeInputs[1].addTextChangedListener(textWatcher)
+        codeInputs[2].addTextChangedListener(textWatcher)
+        codeInputs[3].addTextChangedListener(textWatcher)
+        codeInputs[4].addTextChangedListener(textWatcher)
+        codeInputs[5].addTextChangedListener(textWatcher)
+
         if (verificationId != null) {
             verifyButton.setOnClickListener {
                 val code = codeInputs.joinToString("") { it.text.toString().trim() }
@@ -67,7 +91,6 @@ class SignInCodeFragment : Fragment() {
                             if (task.isSuccessful) {
                                 val phoneNumber = arguments?.getString("phoneNumber")
                                 checkUserByPhoneNumber(phoneNumber)
-                                Toast.makeText(requireContext(), "Signed in successfully!", Toast.LENGTH_SHORT).show()
                             } else {
                                 progressBar.visibility = View.GONE
                                 verifyButton.visibility = View.VISIBLE
