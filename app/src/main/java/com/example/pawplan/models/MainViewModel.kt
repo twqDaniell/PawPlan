@@ -13,7 +13,8 @@ import retrofit2.Response
 
 data class UserDetails(
     val userName: String = "",
-    val phoneNumber: String = ""
+    val phoneNumber: String = "",
+    val _id: String = ""
 )
 
 data class PetDetails(
@@ -74,7 +75,7 @@ class MainViewModel : ViewModel() {
                         petAdoptionDate = firstPet.getDate("petAdoptionDate") ?: Date(0),
                         picture = firstPet.getString("picture") ?: "",
                         vetId = firstPet.getString("vetId") ?: "Unknown",
-                        foodImage = firstPet.getString("foodImage") ?: "Unknown"
+                        foodImage = firstPet.getString("foodImage") ?: "Unknown",
                     )
                 }
             }
