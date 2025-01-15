@@ -25,13 +25,6 @@ fun ProfileActionsSection(
                 style = MaterialTheme.typography.labelLarge // Automatically uses your custom font
             )
         }
-
-        Button(onClick = { /* Lost Pet Logic */ }) {
-            Text(
-                text = "Lost My Pet",
-                style = MaterialTheme.typography.labelLarge // Automatically uses your custom font
-            )
-        }
     }
 
     if (showEditDialog) {
