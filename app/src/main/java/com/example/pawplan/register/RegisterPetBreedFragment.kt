@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -42,7 +43,22 @@ class RegisterPetBreedFragment : Fragment() {
         val breedAutoComplete = view.findViewById<MaterialAutoCompleteTextView>(R.id.breedAutocomplete)
         val birthDateInput = view.findViewById<TextInputEditText>(R.id.birthDateInputEdit)
         val nextButton = view.findViewById<Button>(R.id.nameNextButton)
+        val title = view.findViewById<TextView>(R.id.textViewBreed)
         viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
+
+        if(viewModel.petType == "dog") {
+            if(viewModel.petGender == "He") {
+                title.text = "What type of dog is he?"
+            } else {
+                title.text = "What type of dog is she?"
+            }
+        } else {
+            if(viewModel.petGender == "He") {
+                title.text = "What type of cat is he?"
+            } else {
+                title.text = "What type of cat is she?"
+            }
+        }
 
         birthDateInput.setOnClickListener {
             showDatePicker { date ->
