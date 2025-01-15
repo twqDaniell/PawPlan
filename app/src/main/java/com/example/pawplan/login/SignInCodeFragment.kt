@@ -10,17 +10,18 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
-import androidx.fragment.app.Fragment
-import com.example.pawplan.R
-import com.google.android.material.textfield.TextInputEditText
 import android.widget.Button
+import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.pawplan.MainActivity
+import com.example.pawplan.R
 import com.example.pawplan.models.RegistrationViewModel
 import com.example.pawplan.register.RegisterActivity
-import com.google.firebase.auth.PhoneAuthProvider
+import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 
 private lateinit var auth: FirebaseAuth
@@ -28,6 +29,7 @@ private lateinit var db: FirebaseFirestore
 
 class SignInCodeFragment : Fragment() {
     private lateinit var viewModel: RegistrationViewModel
+    private lateinit var progressBar: ProgressBar
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -42,34 +44,38 @@ class SignInCodeFragment : Fragment() {
             view.findViewById<TextInputEditText>(R.id.code5InputEdit),
             view.findViewById<TextInputEditText>(R.id.code6InputEdit)
         )
+        progressBar = view.findViewById(R.id.progressBar)
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
 
         setupInputMovements(codeInputs)
 
-        // Retrieve the verificationId
         val verificationId = arguments?.getString("verificationId")
+        val verifyButton = view.findViewById<Button>(R.id.button2)
 
         if (verificationId != null) {
-            // Use the verificationId as needed, e.g., for verifying the entered code
-            val codeInputs = listOf(codeInputs[0], codeInputs[1], codeInputs[2], codeInputs[3], codeInputs[4], codeInputs[5])
-            val verifyButton = view.findViewById<Button>(R.id.button2)
-
             verifyButton.setOnClickListener {
                 val code = codeInputs.joinToString("") { it.text.toString().trim() }
                 if (code.length == 6) {
+                    progressBar.visibility = View.VISIBLE
+                    verifyButton.visibility = View.GONE
+
                     val credential = PhoneAuthProvider.getCredential(verificationId, code)
-                    FirebaseAuth.getInstance().signInWithCredential(credential)
+                    auth.signInWithCredential(credential)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
                                 val phoneNumber = arguments?.getString("phoneNumber")
                                 checkUserByPhoneNumber(phoneNumber)
-                                // Successfully signed in
                                 Toast.makeText(requireContext(), "Signed in successfully!", Toast.LENGTH_SHORT).show()
                             } else {
-                                // Handle sign-in failure
-                                Toast.makeText(requireContext(), "Verification failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                                progressBar.visibility = View.GONE
+                                verifyButton.visibility = View.VISIBLE
+                                Toast.makeText(
+                                    requireContext(),
+                                    "Verification failed: ${task.exception?.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
                 } else {
@@ -90,12 +96,12 @@ class SignInCodeFragment : Fragment() {
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                     if (s?.length == 1) {
                         if (i < inputs.size - 1) {
-                            inputs[i + 1].requestFocus() // Move to the next input
+                            inputs[i + 1].requestFocus()
                         } else {
-                            hideKeyboard(inputs[i]) // Hide keyboard on the last input
+                            hideKeyboard(inputs[i])
                         }
                     } else if (s.isNullOrEmpty() && i > 0) {
-                        inputs[i - 1].requestFocus() // Move back to the previous input if empty
+                        inputs[i - 1].requestFocus()
                     }
                 }
 
@@ -110,31 +116,32 @@ class SignInCodeFragment : Fragment() {
     }
 
     private fun checkUserByPhoneNumber(phoneNumber: String?) {
+        progressBar.visibility = View.VISIBLE
+
         db.collection("users")
             .whereEqualTo("phone_number", phoneNumber)
             .get()
             .addOnSuccessListener { documents ->
+                progressBar.visibility = View.GONE
                 if (!documents.isEmpty) {
-                    // User exists
                     Log.d("Firestore", "User found with phone number: $phoneNumber")
                     startActivity(Intent(requireContext(), MainActivity::class.java))
                     requireActivity().finish()
                 } else {
-                    // User does not exist
                     Log.d("Firestore", "No user found with phone number: $phoneNumber")
                     viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
                     viewModel.phoneNumber = phoneNumber
                     Log.d("SignInCodeFragment", "Phone number saved in ViewModel: ${viewModel.phoneNumber}")
 
                     val intent = Intent(requireContext(), RegisterActivity::class.java).apply {
-                        putExtra("phoneNumber", phoneNumber) // Pass the phone number
+                        putExtra("phoneNumber", phoneNumber)
                     }
-
                     startActivity(intent)
                     requireActivity().finish()
                 }
             }
             .addOnFailureListener { e ->
+                progressBar.visibility = View.GONE
                 Log.e("Firestore", "Error checking user existence: ${e.message}", e)
                 Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
             }

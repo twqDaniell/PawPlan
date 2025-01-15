@@ -31,6 +31,7 @@
                 android:text="We've sent you a code"
                 android:textColor="#B3839A"
                 android:textSize="25dp"
+                android:fontFamily="@font/latobold"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -42,12 +43,12 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="125dp"
                 android:text="Send again"
+                android:fontFamily="@font/latoregular"
                 android:textColor="#1270B0"
                 android:textSize="13dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-
                 />
 
             <Button
@@ -55,11 +56,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="160dp"
+                android:fontFamily="@font/latobold"
                 android:backgroundTint="#E4AEC6"
                 android:text="Verify"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:layout_marginTop="160dp"
+                android:visibility="gone" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"

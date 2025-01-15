@@ -20,6 +20,7 @@
         android:textColor="#B3839A"
         android:textSize="15dp"
         app:iconTint="@color/black"
+        android:fontFamily="@font/latoregular"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -46,6 +47,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
+                android:fontFamily="@font/latobold"
                 android:layout_marginTop="20dp"
                 android:textSize="25dp"
                 android:textStyle="bold"
@@ -56,6 +58,7 @@
                 android:id="@+id/textView4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/latoregular"
                 android:text="Now, let's get to know your pet"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

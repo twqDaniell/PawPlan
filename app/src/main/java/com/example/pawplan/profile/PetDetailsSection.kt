@@ -57,7 +57,7 @@ fun PetDetailsSection(mainViewModel: MainViewModel = viewModel()) {
         // Pet Name
         Text(
             text = petDetails?.petName ?: "Loading...",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.bodyLarge
         )
 
         Spacer(modifier = Modifier.height(8.dp))

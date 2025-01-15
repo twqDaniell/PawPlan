@@ -77,7 +77,10 @@ fun MemoriesSection(petId: String, petName: String) {
             OutlinedButton(
                 onClick = { imagePickerLauncher.launch("image/*") }
             ) {
-                Text("Upload More")
+                Text(
+                    text = "Upload More",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
 
