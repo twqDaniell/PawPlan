@@ -37,20 +37,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <TextView
-                android:id="@+id/textView4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="125dp"
-                android:text="Send again"
-                android:fontFamily="@font/latoregular"
-                android:textColor="#1270B0"
-                android:textSize="13dp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                />
-
             <Button
                 android:id="@+id/button2"
                 android:layout_width="wrap_content"
@@ -104,6 +90,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number"
+                        android:gravity="center"
                         />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -129,6 +116,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number"
+                        android:gravity="center"
 
                         />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -155,6 +143,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number"
+                        android:gravity="center"
                         />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -180,6 +169,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number"
+                        android:gravity="center"
                         />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -205,6 +195,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number"
+                        android:gravity="center"
                         />
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -229,6 +220,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number"
+                        android:gravity="center"
                         />
                 </com.google.android.material.textfield.TextInputLayout>
             </androidx.constraintlayout.widget.ConstraintLayout>

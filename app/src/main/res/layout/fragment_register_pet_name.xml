@@ -36,7 +36,7 @@
         app:cardBackgroundColor="#EFEFF4">
 
         <ImageView
-            android:id="@+id/catButton"
+            android:id="@+id/catDogImage"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:src="@drawable/cat_icon"
