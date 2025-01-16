@@ -27,7 +27,8 @@ data class PetDetails(
     val petAdoptionDate: Date,
     val picture: String = "",
     val vetId: String = "",
-    val foodImage: String = ""
+    val foodImage: String = "",
+    val petType: String = ""
 )
 
 class MainViewModel : ViewModel() {
@@ -76,6 +77,7 @@ class MainViewModel : ViewModel() {
                         picture = firstPet.getString("picture") ?: "",
                         vetId = firstPet.getString("vetId") ?: "Unknown",
                         foodImage = firstPet.getString("foodImage") ?: "Unknown",
+                        petType = firstPet.getString("petType") ?: "Unknown"
                     )
                 }
             }

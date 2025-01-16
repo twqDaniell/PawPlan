@@ -30,6 +30,7 @@ fun MissingScreen(mainViewModel: MainViewModel = viewModel()) {
     var showPopup by remember { mutableStateOf(false) }
     var selectedPetId by remember { mutableStateOf("") }
     val petDetails by mainViewModel.petDetails.collectAsState()
+    val userDetails by mainViewModel.userDetails.collectAsState()
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     var missingPets = remember { mutableStateOf<List<MissingPetDetails>>(emptyList()) }
 
@@ -110,8 +111,25 @@ fun MissingScreen(mainViewModel: MainViewModel = viewModel()) {
                 saveMissingPetToFirestore(
                     petId = selectedPetId,
                     description = description,
-                    onSuccess = {
+                    onSuccess = { postId ->
                         println("Report saved successfully!")
+                        missingPets.value += MissingPetDetails(
+                                                petDetails?.petId ?: "Unknown",
+                                        petDetails?.petName ?: "Unknown",
+                                        petDetails?.petBreed ?: "Unknown",
+                                        petDetails?.petWeight ?: 0,
+                                petDetails?.petColor ?: "Unknown",
+                            petDetails?.petBirthDate ?: Date(),
+                            petDetails?.petAdoptionDate ?: Date(),
+                            description,
+                            Date(),
+                            petDetails?.picture ?: "Unknown",
+                                                userDetails?.userName ?: "Unknown",
+                                                userDetails?.phoneNumber ?: "Unknown",
+                                                petDetails?.petType ?: "Unknown",
+                            userId.toString(),
+                            postId
+                        )
                         showPopup = false
                     },
                     onFailure = { e ->
@@ -124,7 +142,7 @@ fun MissingScreen(mainViewModel: MainViewModel = viewModel()) {
     }
 }
 
-fun saveMissingPetToFirestore(petId: String, description: String, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
+fun saveMissingPetToFirestore(petId: String, description: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
     val firestore = FirebaseFirestore.getInstance()
     val missingPetData = mapOf(
         "petId" to petId,
@@ -133,9 +151,10 @@ fun saveMissingPetToFirestore(petId: String, description: String, onSuccess: () 
     )
     firestore.collection("missing")
         .add(missingPetData)
-        .addOnSuccessListener {
+        .addOnSuccessListener { documentReference ->
+            val postId = documentReference.id
             println("Missing pet report saved successfully")
-            onSuccess()
+            onSuccess(postId)
         }
         .addOnFailureListener { e ->
             println("Failed to save missing pet report: ${e.message}")
