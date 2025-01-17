@@ -33,10 +33,19 @@ fun MissingScreen(mainViewModel: MainViewModel) {
     val userDetails by mainViewModel.userDetails.collectAsState()
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     var missingPets = remember { mutableStateOf<List<MissingPetDetails>>(emptyList()) }
+    var showEditPopup by remember { mutableStateOf(false) }
+    var petToEdit by remember { mutableStateOf<MissingPetDetails?>(null) }
+    var showOnlyMyPosts by remember { mutableStateOf(false) }
 
     LaunchedEffect(petDetails) {
         var missingPetsVal = fetchMissingPets()
         missingPets.value = missingPetsVal
+    }
+
+    val filteredMissingPets = if (showOnlyMyPosts) {
+        missingPets.value.filter { it.ownerId == userId } // Show only the user's posts
+    } else {
+        missingPets.value // Show all posts
     }
 
     Column(
@@ -66,6 +75,28 @@ fun MissingScreen(mainViewModel: MainViewModel) {
             }
         }
 
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (showOnlyMyPosts) "Showing My Posts" else "Showing All Posts",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            )
+            Switch(
+                checked = showOnlyMyPosts,
+                onCheckedChange = { showOnlyMyPosts = it }, // Update the state when toggled
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            )
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
         val context = LocalContext.current
 
@@ -76,7 +107,7 @@ fun MissingScreen(mainViewModel: MainViewModel) {
         ) {
              // Get the context inside the composable scope
 
-            items(missingPets.value) { pet ->
+            items(filteredMissingPets) { pet ->
                 MissingPetCard(
                     pet = pet,
                     isMyPost = pet.ownerId == userId,
@@ -97,7 +128,11 @@ fun MissingScreen(mainViewModel: MainViewModel) {
                                 ).show()
                             }
                         )
-                    }
+                    },
+                    onEdit = { pet ->
+                        petToEdit = pet // Assign the selected pet to petToEdit
+                        showEditPopup = true // Show the edit popup
+                    },
                 )
             }
         }
@@ -138,6 +173,28 @@ fun MissingScreen(mainViewModel: MainViewModel) {
                 )
             },
             mainViewModel
+        )
+    }
+
+    if (showEditPopup && petToEdit != null) {
+        EditMissingPetPopup(
+            petDetails = petToEdit!!,
+            onDismiss = { showEditPopup = false },
+            onSave = { updatedDetails ->
+                editPost(
+                    postId = petToEdit!!.postId,
+                    updatedDetails = updatedDetails,
+                    onSuccess = {
+                        // Update the local list
+                        missingPets.value = missingPets.value.map {
+                            if (it.postId == updatedDetails.postId) updatedDetails else it
+                        }
+                        showEditPopup = false
+                    },
+                    onFailure = { e ->
+                    }
+                )
+            }
         )
     }
 }
@@ -260,3 +317,30 @@ fun deletePost(
             onFailure(exception) // Notify failure
         }
 }
+
+fun editPost(
+    postId: String,
+    updatedDetails: MissingPetDetails,
+    onSuccess: () -> Unit,
+    onFailure: (Exception) -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+
+    // Update the missing pet details in the 'missing' collection
+    val updatedMissingData = mapOf(
+        "description" to updatedDetails.description
+    )
+
+    db.collection("missing")
+        .document(postId)
+        .update(updatedMissingData)
+        .addOnSuccessListener {
+            Log.d("EditPost", "Missing post updated successfully")
+            onSuccess()
+        }
+        .addOnFailureListener { e ->
+            Log.e("EditPost", "Error updating missing post", e)
+            onFailure(e) // Notify failure
+        }
+}
+
