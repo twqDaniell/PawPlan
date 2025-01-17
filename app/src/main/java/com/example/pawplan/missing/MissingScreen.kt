@@ -26,7 +26,7 @@ import kotlinx.coroutines.tasks.await
 import java.util.*
 
 @Composable
-fun MissingScreen(mainViewModel: MainViewModel = viewModel()) {
+fun MissingScreen(mainViewModel: MainViewModel) {
     var showPopup by remember { mutableStateOf(false) }
     var selectedPetId by remember { mutableStateOf("") }
     val petDetails by mainViewModel.petDetails.collectAsState()

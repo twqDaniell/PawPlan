@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -24,7 +25,7 @@ data class VetVisit(
 )
 
 @Composable
-fun HealthScreen(mainViewModel: MainViewModel = viewModel()) {
+fun HealthScreen(mainViewModel: MainViewModel) {
     val petDetails by mainViewModel.petDetails.collectAsState()
     val vetVisits = remember { mutableStateOf<List<VetVisit>>(emptyList()) }
 
@@ -40,9 +41,16 @@ fun HealthScreen(mainViewModel: MainViewModel = viewModel()) {
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(32.dp)
     ) {
-        HeaderSection(petDetails?.petName ?: "Unknown name")
-
-        VetInfoSection(petDetails?.vetId ?: "Unknown", findLastVisit(vetVisits.value), findNextVisit(vetVisits.value), vetVisits.value.size, petDetails?.petWeight ?: 0, petDetails?.petId ?: "Unknown")
+        HeaderSection(petDetails)
+        key(petDetails) {
+            VetInfoSection(
+                petDetails,
+                findLastVisit(vetVisits.value),
+                findNextVisit(vetVisits.value),
+                vetVisits.value.size,
+                mainViewModel
+            )
+        }
 
         VaccinationRecordsSection(
             vetVisits.value,

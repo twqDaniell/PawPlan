@@ -31,8 +31,8 @@ import kotlinx.coroutines.tasks.await
 
 @Composable
 fun FoodScreen(
-    allergies: List<String>,
-    mainViewModel: MainViewModel = viewModel()
+    mainViewModel: MainViewModel,
+    allergies: List<String>
 ) {
     val petDetails by mainViewModel.petDetails.collectAsState()
     var foodImageUrl = petDetails?.foodImage ?: ""
@@ -44,11 +44,11 @@ fun FoodScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Help Text Section
-        FoodHeaderSection(petDetails?.petName ?: "Unknown")
+        FoodHeaderSection(petDetails)
 
         // Food Image Section
         FoodImageSection(
-            foodImageUrl = foodImageUrl,
+            foodImageUrl = petDetails?.foodImage ?: "",
             onImageUpload = { uri ->
                 mainViewModel.viewModelScope.launch {
                     val petId = petDetails?.petId ?: "Unknown"
@@ -56,7 +56,7 @@ fun FoodScreen(
                     val uploadedUrl = uploadImageToFirebase(uri, petId)
                     if (uploadedUrl != null) {
                         // Save URL to Firestore or Realtime Database
-                        saveImageUrlToFirestore(petId, uploadedUrl)
+                        saveImageUrlToFirestore(petId, uploadedUrl, mainViewModel)
                         // Or use Realtime Database
                         // saveImageUrlToRealtimeDatabase(petId, uploadedUrl)
 
@@ -66,11 +66,12 @@ fun FoodScreen(
                         println("Image upload failed.")
                     }
                 }
-            }
+            },
+            mainViewModel
         )
 
         // Allergies Section
-        FoodAllergiesSection(petDetails?.petName ?: "Unknown", petDetails?.petId ?: "Unknown")
+        FoodAllergiesSection(petDetails)
     }
 }
 
@@ -93,13 +94,21 @@ suspend fun uploadImageToFirebase(uri: Uri, petId: String): String? {
     }
 }
 
-suspend fun saveImageUrlToFirestore(petId: String, imageUrl: String) {
+suspend fun saveImageUrlToFirestore(petId: String, imageUrl: String, mainViewModel: MainViewModel) {
     val db = FirebaseFirestore.getInstance()
     try {
         // Save imageUrl under the pet's document
         db.collection("pets").document(petId)
             .update("foodImage", imageUrl) // Adds or updates the field "foodImage"
             .await()
+
+        // Update petDetails in MainViewModel
+        val currentPetDetails = mainViewModel.petDetails.value
+        if (currentPetDetails != null) {
+            val updatedPetDetails = currentPetDetails.copy(foodImage = imageUrl)
+            mainViewModel.updatePetDetails(updatedPetDetails) // Notify state change
+        }
+
         println("Image URL saved successfully.")
     } catch (e: Exception) {
         e.printStackTrace()
