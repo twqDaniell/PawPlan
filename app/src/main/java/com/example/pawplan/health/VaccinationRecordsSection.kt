@@ -55,7 +55,7 @@ fun VaccinationRecordsSection(vetVisits: List<VetVisit>, onAddVisit: (VetVisit) 
             IconButton(onClick = { showDialog = true }) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Add Allergy",
+                    contentDescription = "Add Visit",
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
