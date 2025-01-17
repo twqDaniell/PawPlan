@@ -38,6 +38,18 @@ fun EditProfileDialog(
         }
     }
 
+    // Condition to check if the save button should be enabled
+    val isSaveEnabled = petName.isNotBlank() &&
+            petBreed.isNotBlank() &&
+            petWeight.isNotBlank() &&
+            petColor.isNotBlank() &&
+            (petName != petDetails.petName ||
+                    petBreed != petDetails.petBreed ||
+                    petWeight != petDetails.petWeight.toString() ||
+                    petColor != petDetails.petColor ||
+                    petBirthDate != petDetails.petBirthDate ||
+                    petAdoptionDate != petDetails.petAdoptionDate)
+
     AlertDialog(
         onDismissRequest = { onCancel() },
         title = { Text("Edit Pet Profile") },
@@ -129,35 +141,23 @@ fun EditProfileDialog(
                         }
                     }
                 }
-
-//                OutlinedTextField(
-//                    value = petBirthDate.toString(), // Format appropriately in real use
-//                    onValueChange = { /* Date parsing logic here */ },
-//                    label = { Text("Pet Birth Date") },
-//                    modifier = Modifier.fillMaxWidth(),
-//                    enabled = false // For simplicity; replace with date picker
-//                )
-//                OutlinedTextField(
-//                    value = petAdoptionDate.toString(), // Format appropriately in real use
-//                    onValueChange = { /* Date parsing logic here */ },
-//                    label = { Text("Pet Adoption Date") },
-//                    modifier = Modifier.fillMaxWidth(),
-//                    enabled = false // For simplicity; replace with date picker
-//                )
             }
         },
         confirmButton = {
-            Button(onClick = {
-                val updatedPetDetails = petDetails.copy(
-                    petName = petName,
-                    petBreed = petBreed,
-                    petWeight = petWeight.toIntOrNull() ?: petDetails.petWeight,
-                    petColor = petColor,
-                    petBirthDate = petBirthDate,
-                    petAdoptionDate = petAdoptionDate
-                )
-                onSave(updatedPetDetails)
-            }) {
+            Button(
+                onClick = {
+                    val updatedPetDetails = petDetails.copy(
+                        petName = petName,
+                        petBreed = petBreed,
+                        petWeight = petWeight.toIntOrNull() ?: petDetails.petWeight,
+                        petColor = petColor,
+                        petBirthDate = petBirthDate,
+                        petAdoptionDate = petAdoptionDate
+                    )
+                    onSave(updatedPetDetails)
+                },
+                enabled = isSaveEnabled // Disable button if the condition is not met
+            ) {
                 Text("Save")
             }
         },
