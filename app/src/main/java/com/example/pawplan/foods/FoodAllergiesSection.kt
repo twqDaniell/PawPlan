@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.pawplan.models.PetDetails
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -27,8 +28,7 @@ data class Allergy(
 
 @Composable
 fun FoodAllergiesSection(
-    petName: String,
-    petId: String
+    petDetails: PetDetails?
 ) {
     val allergies = remember { mutableStateOf<List<Allergy>>(emptyList()) }
     var showDialog by remember { mutableStateOf(false) }
@@ -36,9 +36,9 @@ fun FoodAllergiesSection(
     val coroutineScope = rememberCoroutineScope()
 
     // Fetch allergies when the petId changes
-    LaunchedEffect(petId) {
+    LaunchedEffect(petDetails?.petId) {
         try {
-            val petAllergies = fetchAllergiesForPet(petId) // Call the suspend function
+            val petAllergies = fetchAllergiesForPet(petDetails?.petId ?: "") // Call the suspend function
             allergies.value = petAllergies
         } catch (e: Exception) {
             Log.e("FoodAllergiesSection", "Error fetching allergies: ${e.message}")
@@ -56,7 +56,7 @@ fun FoodAllergiesSection(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${petName}’s Food Allergies",
+                text = "${petDetails?.petName}’s Food Allergies",
                 style = MaterialTheme.typography.titleMedium
             )
             IconButton(onClick = { showDialog = true }) {
@@ -128,13 +128,13 @@ fun FoodAllergiesSection(
                         coroutineScope.launch {
                             try {
                                 saveAllergyToFirestore(
-                                    Allergy(petId = petId, allergyName = newAllergyName)
+                                    Allergy(petId = petDetails?.petId ?: "", allergyName = newAllergyName)
                                 )
                                 showDialog = false
                                 newAllergyName = ""
 
                                 // Reload allergies after adding
-                                val updatedAllergies = fetchAllergiesForPet(petId)
+                                val updatedAllergies = fetchAllergiesForPet(petDetails?.petId ?: "")
                                 allergies.value = updatedAllergies
                             } catch (e: Exception) {
                                 Log.e("FoodAllergiesSection", "Error saving allergy: ${e.message}")

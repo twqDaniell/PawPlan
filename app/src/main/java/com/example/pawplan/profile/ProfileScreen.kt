@@ -12,7 +12,7 @@ import androidx.compose.runtime.getValue
 import com.example.pawplan.models.PetDetails
 
 @Composable
-fun ProfileScreen(mainViewModel: MainViewModel = viewModel()) {
+fun ProfileScreen(mainViewModel: MainViewModel) {
     val petDetails by mainViewModel.petDetails.collectAsState()
 
     Column(

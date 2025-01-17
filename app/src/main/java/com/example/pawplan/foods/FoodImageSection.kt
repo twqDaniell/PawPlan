@@ -15,6 +15,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,16 +24,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.pawplan.R
+import com.example.pawplan.models.MainViewModel
 
 @Composable
 fun FoodImageSection(
     foodImageUrl: String?, // Nullable for cases where no image is uploaded
     onImageUpload: (Uri) -> Unit, // Callback for handling uploaded image URI
+    mainViewModel: MainViewModel = viewModel()
 ) {
     val context = LocalContext.current
+    val petDetails by mainViewModel.petDetails.collectAsState()
 
     // Image picker launcher
     val launcher = rememberLauncherForActivityResult(
@@ -51,7 +57,7 @@ fun FoodImageSection(
             .clickable { launcher.launch("image/*") }, // Trigger image picker
         contentAlignment = Alignment.Center
     ) {
-        if (foodImageUrl.isNullOrEmpty()) {
+        if (petDetails?.foodImage.isNullOrEmpty() || petDetails?.foodImage == "Unknown") {
             Icon(
                 imageVector = Icons.Default.Add, // Placeholder icon
                 contentDescription = "Add Food Image",
@@ -61,7 +67,7 @@ fun FoodImageSection(
         } else {
             AsyncImage(
                 model = ImageRequest.Builder(context)
-                    .data(foodImageUrl)
+                    .data(petDetails?.foodImage)
                     .crossfade(true)
                     .placeholder(R.drawable.placeholder)
                     .error(R.drawable.placeholder)

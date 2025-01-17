@@ -5,17 +5,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.pawplan.foods.FoodScreen
 import com.example.pawplan.health.HealthScreen
 import com.example.pawplan.missing.MissingScreen
+import com.example.pawplan.models.MainViewModel
 import com.example.pawplan.profile.ProfileScreen
 
 @Composable
 fun BarsWithScaffold() {
     val navController = rememberNavController()
+    val mainViewModel: MainViewModel = viewModel()
 
     Scaffold(
         topBar = { SmallTopBar() }, // Reuse TopAppBar from another file
@@ -29,16 +32,17 @@ fun BarsWithScaffold() {
                 .padding(innerPadding)
         ) {
             composable("profile") {
-                ProfileScreen() // Your Profile Screen Composable
+                ProfileScreen(mainViewModel) // Your Profile Screen Composable
             }
             composable("health") {
-                HealthScreen() // Your Health Screen Composable
+                HealthScreen(mainViewModel) // Your Health Screen Composable
             }
             composable("missing") {
-                MissingScreen() // Your Missing Screen Composable
+                MissingScreen(mainViewModel) // Your Missing Screen Composable
             }
             composable("food") {
                 FoodScreen(
+                    mainViewModel,
                     allergies = listOf("Artificial Additives", "Beef", "Soy"),
                 ) // Your Food Screen Composable
             }
