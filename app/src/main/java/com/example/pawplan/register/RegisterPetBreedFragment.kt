@@ -1,6 +1,8 @@
 package com.example.pawplan.register
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -8,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -39,7 +42,25 @@ class RegisterPetBreedFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_register_pet_breed, container, false)
         val breedAutoComplete = view.findViewById<MaterialAutoCompleteTextView>(R.id.breedAutocomplete)
         val birthDateInput = view.findViewById<TextInputEditText>(R.id.birthDateInputEdit)
+        val nextButton = view.findViewById<Button>(R.id.nameNextButton)
+        val title = view.findViewById<TextView>(R.id.textViewBreed1)
         viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
+
+        if(viewModel.petType == "dog") {
+            breedAutoComplete.hint = "Dog breed"
+            if(viewModel.petGender == "He") {
+                title.text = "What type of dog is he?"
+            } else {
+                title.text = "What type of dog is she?"
+            }
+        } else {
+            breedAutoComplete.hint = "Cat breed"
+            if(viewModel.petGender == "He") {
+                title.text = "What type of cat is he?"
+            } else {
+                title.text = "What type of cat is she?"
+            }
+        }
 
         birthDateInput.setOnClickListener {
             showDatePicker { date ->
@@ -58,11 +79,40 @@ class RegisterPetBreedFragment : Fragment() {
             findNavController().navigate(R.id.action_registerPetBreedFragment_to_registerPetNameFragment)
         }
 
-        view.findViewById<Button>(R.id.nameNextButton)?.setOnClickListener {
+        nextButton.setOnClickListener {
             viewModel.petBreed = breedAutoComplete.text.toString()
             viewModel.petBirthDate = selectedDate
             findNavController().navigate(R.id.action_registerPetBreedFragment_to_registerPetDetailsFragment)
         }
+
+        var isBreedSelected = false
+
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val isFormFilled = birthDateInput.text.toString().isNotEmpty() && isBreedSelected
+                nextButton.isEnabled = isFormFilled
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+            }
+        }
+
+        val textWatcherSelect = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                isBreedSelected = true
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+            }
+        }
+
+        birthDateInput.addTextChangedListener(textWatcher)
+        breedAutoComplete.addTextChangedListener(textWatcherSelect)
+        breedAutoComplete.addTextChangedListener(textWatcher)
 
         return view
     }

@@ -1,6 +1,8 @@
 package com.example.pawplan.register
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -33,6 +35,7 @@ class RegisterDetailsFragment : Fragment() {
         val colorAutoComplete = view.findViewById<MaterialAutoCompleteTextView>(R.id.autoCompleteTextViewColor)
         val adoptionDateInput = view.findViewById<TextInputEditText>(R.id.textInputEditTextAdoptionDate)
         val weight = view.findViewById<TextInputEditText>(R.id.textInputEditTextWeight)
+        val nextButton = view.findViewById<Button>(R.id.nameNextButton)
         viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
 
         val colors = listOf("Brown", "Black", "White", "Orange", "Gray", "Multicolor")
@@ -57,6 +60,36 @@ class RegisterDetailsFragment : Fragment() {
             viewModel.petColor = colorAutoComplete.text.toString()
             findNavController().navigate(R.id.action_registerDetailsFragment_to_registerPhotoFragment)
         }
+
+        var isColorSelected = false
+
+        val textWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                val isFormFilled = adoptionDateInput.text.toString().isNotEmpty() && weight.text.toString().isNotEmpty() && isColorSelected
+                nextButton.isEnabled = isFormFilled
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+            }
+        }
+
+        val textWatcherSelect = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                isColorSelected = true
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+            }
+        }
+
+        adoptionDateInput.addTextChangedListener(textWatcher)
+        weight.addTextChangedListener(textWatcher)
+        colorAutoComplete.addTextChangedListener(textWatcherSelect)
+        colorAutoComplete.addTextChangedListener(textWatcher)
 
         return view
     }

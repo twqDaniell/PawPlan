@@ -1,5 +1,8 @@
 package com.example.pawplan.foods
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -12,24 +15,40 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.pawplan.R
 
 @Composable
 fun FoodImageSection(
     foodImageUrl: String?, // Nullable for cases where no image is uploaded
+    onImageUpload: (Uri) -> Unit, // Callback for handling uploaded image URI
 ) {
+    val context = LocalContext.current
+
+    // Image picker launcher
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            onImageUpload(it)
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .height(400.dp)
             .clip(MaterialTheme.shapes.medium)
             .background(MaterialTheme.colorScheme.surface)
-            .clickable { /* Add upload functionality */ },
+            .clickable { launcher.launch("image/*") }, // Trigger image picker
         contentAlignment = Alignment.Center
     ) {
         if (foodImageUrl.isNullOrEmpty()) {
@@ -41,10 +60,15 @@ fun FoodImageSection(
             )
         } else {
             AsyncImage(
-                model = foodImageUrl,
+                model = ImageRequest.Builder(context)
+                    .data(foodImageUrl)
+                    .crossfade(true)
+                    .placeholder(R.drawable.placeholder)
+                    .error(R.drawable.placeholder)
+                    .build(),
                 contentDescription = "Food Image",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
         }
     }

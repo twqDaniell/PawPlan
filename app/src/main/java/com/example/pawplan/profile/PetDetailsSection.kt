@@ -19,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -45,7 +46,7 @@ fun PetDetailsSection(mainViewModel: MainViewModel = viewModel()) {
     ) {
         // Pet Image
         AsyncImage(
-            model = petDetails?.pictureUrl ?: R.drawable.placeholder,
+            model = petDetails?.picture ?: R.drawable.placeholder,
             contentDescription = "Pet Image",
             modifier = Modifier
                 .size(120.dp)
@@ -57,7 +58,8 @@ fun PetDetailsSection(mainViewModel: MainViewModel = viewModel()) {
         // Pet Name
         Text(
             text = petDetails?.petName ?: "Loading...",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Bold
         )
 
         Spacer(modifier = Modifier.height(8.dp))

@@ -77,30 +77,40 @@ fun MemoriesSection(petId: String, petName: String) {
             OutlinedButton(
                 onClick = { imagePickerLauncher.launch("image/*") }
             ) {
-                Text("Upload More")
+                Text(
+                    text = "Upload",
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
 
-        // Grid of Images
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
-            contentPadding = PaddingValues(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(imageUrls) { imageUrl ->
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(imageUrl)
-                        .crossfade(true)
-                        .placeholder(R.drawable.placeholder)
-                        .error(R.drawable.placeholder)
-                        .build(),
-                    contentDescription = "Memory Image",
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(RectangleShape)
-                )
+        if(imageUrls.isEmpty()) {
+            Text(
+                text = "No memories uploaded yet",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        } else {
+            // Grid of Images
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                contentPadding = PaddingValues(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(imageUrls) { imageUrl ->
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(true)
+                            .placeholder(R.drawable.placeholder)
+                            .error(R.drawable.placeholder)
+                            .build(),
+                        contentDescription = "Memory Image",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(RectangleShape)
+                    )
+                }
             }
         }
     }

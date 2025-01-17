@@ -39,7 +39,6 @@ fun BarsWithScaffold() {
             }
             composable("food") {
                 FoodScreen(
-                    foodImageUrl = "https://via.placeholder.com/300", // Replace with actual image URL or logic
                     allergies = listOf("Artificial Additives", "Beef", "Soy"),
                 ) // Your Food Screen Composable
             }

@@ -13,7 +13,8 @@ import retrofit2.Response
 
 data class UserDetails(
     val userName: String = "",
-    val phoneNumber: String = ""
+    val phoneNumber: String = "",
+    val _id: String = ""
 )
 
 data class PetDetails(
@@ -24,7 +25,10 @@ data class PetDetails(
     val petColor: String = "",
     val petBirthDate: Date,
     val petAdoptionDate: Date,
-    val pictureUrl: String = ""
+    val picture: String = "",
+    val vetId: String = "",
+    val foodImage: String = "",
+    val petType: String = ""
 )
 
 class MainViewModel : ViewModel() {
@@ -70,7 +74,10 @@ class MainViewModel : ViewModel() {
                         petColor = firstPet.getString("petColor") ?: "Unknown",
                         petBirthDate = firstPet.getDate("petBirthDate") ?: Date(0), // Fallback to epoch
                         petAdoptionDate = firstPet.getDate("petAdoptionDate") ?: Date(0),
-                        pictureUrl = firstPet.getString("picture") ?: ""
+                        picture = firstPet.getString("picture") ?: "",
+                        vetId = firstPet.getString("vetId") ?: "Unknown",
+                        foodImage = firstPet.getString("foodImage") ?: "Unknown",
+                        petType = firstPet.getString("petType") ?: "Unknown"
                     )
                 }
             }
