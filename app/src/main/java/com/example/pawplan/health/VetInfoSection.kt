@@ -269,17 +269,31 @@ fun showAddVetDialog(
     var name by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
 
+    // Check if the Add button should be enabled
+    val isAddEnabled = name.isNotBlank() && phone.isNotBlank()
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add Vet") },
         text = {
             Column {
-                TextField(value = name, onValueChange = { name = it }, label = { Text("Vet Name") })
-                TextField(value = phone, onValueChange = { phone = it }, label = { Text("Phone Number") })
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Vet Name") }
+                )
+                TextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("Phone Number") }
+                )
             }
         },
         confirmButton = {
-            Button(onClick = { onAddVet(name, phone) }) {
+            Button(
+                onClick = { onAddVet(name, phone) },
+                enabled = isAddEnabled // Disable Add button if condition is not met
+            ) {
                 Text("Add")
             }
         },

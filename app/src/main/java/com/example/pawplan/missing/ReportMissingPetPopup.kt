@@ -28,6 +28,9 @@ fun ReportMissingPetPopup(
 ) {
     var description by remember { mutableStateOf("") }
 
+    // Condition to enable or disable the Post button
+    val isPostEnabled = description.isNotBlank()
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Report Missing Pet") },
@@ -50,10 +53,13 @@ fun ReportMissingPetPopup(
             }
         },
         confirmButton = {
-            Button(onClick = {
-                onSave(description)
-                onDismiss()
-            }) {
+            Button(
+                onClick = {
+                    onSave(description)
+                    onDismiss()
+                },
+                enabled = isPostEnabled // Enable/disable Post button
+            ) {
                 Text("Post")
             }
         },

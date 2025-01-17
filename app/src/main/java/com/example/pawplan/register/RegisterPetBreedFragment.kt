@@ -43,16 +43,18 @@ class RegisterPetBreedFragment : Fragment() {
         val breedAutoComplete = view.findViewById<MaterialAutoCompleteTextView>(R.id.breedAutocomplete)
         val birthDateInput = view.findViewById<TextInputEditText>(R.id.birthDateInputEdit)
         val nextButton = view.findViewById<Button>(R.id.nameNextButton)
-        val title = view.findViewById<TextView>(R.id.textViewBreed)
+        val title = view.findViewById<TextView>(R.id.textViewBreed1)
         viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
 
         if(viewModel.petType == "dog") {
+            breedAutoComplete.hint = "Dog breed"
             if(viewModel.petGender == "He") {
                 title.text = "What type of dog is he?"
             } else {
                 title.text = "What type of dog is she?"
             }
         } else {
+            breedAutoComplete.hint = "Cat breed"
             if(viewModel.petGender == "He") {
                 title.text = "What type of cat is he?"
             } else {

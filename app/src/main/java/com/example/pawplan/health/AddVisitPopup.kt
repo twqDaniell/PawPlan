@@ -38,6 +38,9 @@ fun AddVisitPopup(onDismiss: () -> Unit, onAdd: (VetVisit) -> Unit, petId: Strin
     val context = LocalContext.current
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
+    // Check if the Add button should be enabled
+    val isAddEnabled = topic.isNotBlank() && visitDate != null
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add New Vet Visit") },
@@ -52,7 +55,7 @@ fun AddVisitPopup(onDismiss: () -> Unit, onAdd: (VetVisit) -> Unit, petId: Strin
                 )
 
                 // Date Picker Button
-                OutlinedButton (
+                OutlinedButton(
                     onClick = {
                         val calendar = Calendar.getInstance()
                         val datePickerDialog = DatePickerDialog(
@@ -96,7 +99,8 @@ fun AddVisitPopup(onDismiss: () -> Unit, onAdd: (VetVisit) -> Unit, petId: Strin
                         )
                         onAdd(visit)
                     }
-                }
+                },
+                enabled = isAddEnabled // Enable/disable Add button
             ) {
                 Text("Add")
             }
@@ -108,6 +112,7 @@ fun AddVisitPopup(onDismiss: () -> Unit, onAdd: (VetVisit) -> Unit, petId: Strin
         }
     )
 }
+
 
 fun saveVetVisitToFirestore(visit: VetVisit, onSuccess: () -> Unit, onFailure: (Exception) -> Unit) {
     val firestore = FirebaseFirestore.getInstance()

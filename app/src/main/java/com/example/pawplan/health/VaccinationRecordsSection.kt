@@ -55,22 +55,29 @@ fun VaccinationRecordsSection(vetVisits: List<VetVisit>, onAddVisit: (VetVisit) 
             IconButton(onClick = { showDialog = true }) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Add Allergy",
+                    contentDescription = "Add Visit",
                     tint = MaterialTheme.colorScheme.primary
                 )
             }
         }
 
-        // Vaccination List
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.fillMaxSize() // Ensure it takes available space
-        ) {
-            items(vetVisits) { visit ->
-                VaccinationRecordItem(
-                    visit.topic,
-                    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(visit.visitDate)
-                )
+        if(vetVisits.isEmpty()) {
+            Text(
+                text = "No vet visits recorded",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        } else {
+            // Vaccination List
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxSize() // Ensure it takes available space
+            ) {
+                items(vetVisits) { visit ->
+                    VaccinationRecordItem(
+                        visit.topic,
+                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(visit.visitDate)
+                    )
+                }
             }
         }
 
