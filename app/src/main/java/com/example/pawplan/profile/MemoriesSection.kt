@@ -3,6 +3,7 @@ package com.example.pawplan.profile
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,13 +33,17 @@ fun MemoriesSection(petId: String, petName: String) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // State for memory image URLs
+    // State for memory image URLs and upload status
     var imageUrls by remember { mutableStateOf<List<String>>(emptyList()) }
+    var isUploading by remember { mutableStateOf(false) } // Uploading state
+    var isFetching by remember { mutableStateOf(true) } // Fetching state
 
     // Fetch memories from Firestore
     LaunchedEffect(petId) {
+        isFetching = true
         fetchMemories(petId) { urls ->
             imageUrls = urls
+            isFetching = false
         }
     }
 
@@ -47,10 +52,20 @@ fun MemoriesSection(petId: String, petName: String) {
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri: Uri? ->
             if (uri != null) {
+                isUploading = true // Start upload
                 scope.launch(Dispatchers.IO) {
-                    uploadMemoryImage(petId, uri) { downloadUrl ->
-                        imageUrls = imageUrls + downloadUrl // Add new URL to the list
-                    }
+                    uploadMemoryImage(
+                        petId = petId,
+                        imageUri = uri,
+                        onSuccess = { downloadUrl ->
+                            imageUrls = imageUrls + downloadUrl // Add new URL to the list
+                            isUploading = false // End upload
+                        },
+                        onFailure = {
+                            isUploading = false // End upload on failure
+                            Toast.makeText(context, "Upload failed", Toast.LENGTH_SHORT).show()
+                        }
+                    )
                 }
             } else {
                 Toast.makeText(context, "No image selected", Toast.LENGTH_SHORT).show()
@@ -75,41 +90,58 @@ fun MemoriesSection(petId: String, petName: String) {
             )
 
             OutlinedButton(
-                onClick = { imagePickerLauncher.launch("image/*") }
+                onClick = { imagePickerLauncher.launch("image/*") },
+                enabled = !isUploading && !isFetching // Disable button during upload or fetch
             ) {
                 Text(
-                    text = "Upload",
+                    text = if (isUploading) "Uploading..." else "Upload",
                     style = MaterialTheme.typography.labelLarge
                 )
             }
         }
 
-        if(imageUrls.isEmpty()) {
-            Text(
-                text = "No memories uploaded yet",
-                style = MaterialTheme.typography.bodyMedium
-            )
-        } else {
-            // Grid of Images
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(imageUrls) { imageUrl ->
-                    AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(imageUrl)
-                            .crossfade(true)
-                            .placeholder(R.drawable.placeholder)
-                            .error(R.drawable.placeholder)
-                            .build(),
-                        contentDescription = "Memory Image",
-                        modifier = Modifier
-                            .size(100.dp)
-                            .clip(RectangleShape)
-                    )
+        when {
+            isFetching -> {
+                // Show loader during fetch
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            imageUrls.isEmpty() -> {
+                Text(
+                    text = "No memories uploaded yet",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            else -> {
+                // Grid of Images
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(3),
+                    contentPadding = PaddingValues(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(imageUrls) { imageUrl ->
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(imageUrl)
+                                .crossfade(true)
+                                .placeholder(R.drawable.placeholder)
+                                .error(R.drawable.placeholder)
+                                .build(),
+                            contentDescription = "Memory Image",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(RectangleShape)
+                        )
+                    }
                 }
             }
         }
@@ -123,17 +155,29 @@ fun fetchMemories(petId: String, onResult: (List<String>) -> Unit) {
         .whereEqualTo("petId", petId)
         .get()
         .addOnSuccessListener { documents ->
+            if (documents.isEmpty) {
+                Log.d("Memories", "No documents found for petId: $petId")
+            } else {
+                Log.d("Memories", "Documents found: ${documents.size()}")
+            }
             val urls = documents.mapNotNull { it.getString("picture") }
+            Log.d("Memories", "Fetched URLs: $urls")
             onResult(urls)
         }
         .addOnFailureListener { e ->
-            e.printStackTrace()
+            Log.e("Memories", "Error fetching memories: ${e.message}")
             onResult(emptyList()) // Return empty list on failure
         }
 }
 
+
 // Upload memory image to Firebase Storage and save to Firestore
-fun uploadMemoryImage(petId: String, imageUri: Uri, onSuccess: (String) -> Unit) {
+fun uploadMemoryImage(
+    petId: String,
+    imageUri: Uri,
+    onSuccess: (String) -> Unit,
+    onFailure: () -> Unit
+) {
     val storageRef = FirebaseStorage.getInstance().reference
     val fileName = "memories/${UUID.randomUUID()}.jpg"
     val fileRef = storageRef.child(fileName)
@@ -141,16 +185,21 @@ fun uploadMemoryImage(petId: String, imageUri: Uri, onSuccess: (String) -> Unit)
     fileRef.putFile(imageUri)
         .addOnSuccessListener {
             fileRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                saveMemoryToFirestore(petId, downloadUrl.toString(), onSuccess)
+                saveMemoryToFirestore(petId, downloadUrl.toString(),
+                    onSuccess = { onSuccess(downloadUrl.toString()) },
+                    onFailure = { onFailure() }
+                )
+            }.addOnFailureListener {
+                onFailure()
             }
         }
-        .addOnFailureListener { e ->
-            e.printStackTrace()
+        .addOnFailureListener {
+            onFailure()
         }
 }
 
 // Save memory to Firestore
-fun saveMemoryToFirestore(petId: String, imageUrl: String, onSuccess: (String) -> Unit) {
+fun saveMemoryToFirestore(petId: String, imageUrl: String, onSuccess: (String) -> Unit, onFailure: () -> Unit) {
     val memoryData = hashMapOf(
         "petId" to petId,
         "picture" to imageUrl
@@ -161,7 +210,7 @@ fun saveMemoryToFirestore(petId: String, imageUrl: String, onSuccess: (String) -
         .addOnSuccessListener {
             onSuccess(imageUrl)
         }
-        .addOnFailureListener { e ->
-            e.printStackTrace()
+        .addOnFailureListener {
+            onFailure()
         }
 }

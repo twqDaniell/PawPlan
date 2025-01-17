@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Phone
@@ -19,6 +21,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -60,17 +63,14 @@ fun VetInfoSection(
     numberOfVisits: Int,
     mainViewModel: MainViewModel = viewModel()
 ) {
-
     val loading by mainViewModel.loading.collectAsState()
     if (loading) {
         CircularProgressIndicator()
     } else {
-
-        LaunchedEffect(petDetails) {
-            Log.d("Recomposition", "Recomposed with weight: ${petDetails?.petWeight}")
-        }
-        // State to control the visibility of the dialog
+        // State to control the visibility of the Add/Edit dialog
         var showDialog by remember { mutableStateOf(false) }
+        var isEditing by remember { mutableStateOf(false) }
+        var editVetDetails by remember { mutableStateOf(VetDetails()) }
 
         // Collect the vet details state
         val vetDetails by vetDetails.collectAsState()
@@ -85,9 +85,11 @@ fun VetInfoSection(
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp, vertical = 16.dp)
         ) {
-            // If no vet details are available, show the Add Vet Button
             if (vetDetails == null) {
-                AddVetButton(onClick = { showDialog = true })
+                AddVetButton(onClick = {
+                    isEditing = false
+                    showDialog = true
+                })
             } else {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -156,7 +158,7 @@ fun VetInfoSection(
                         }
                     }
 
-                    // Right Column: Additional Details
+                    // Right Column: Additional Details and Edit Button
                     Column(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -228,36 +230,72 @@ fun VetInfoSection(
                                 style = MaterialTheme.typography.bodyLarge
                             )
                         }
+
+                        // Edit Button
+                        IconButton(
+                            onClick =  {
+                                isEditing = true
+                                editVetDetails = vetDetails ?: VetDetails() // Pre-fill with current vet details
+                                showDialog = true
+                            },
+                            modifier = Modifier.size(24.dp) // Set size for a compact look
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Post",
+                                tint = MaterialTheme.colorScheme.primary // Red color for the delete icon
+                            )
+                        }
                     }
                 }
             }
         }
 
-        // Show the Add Vet Dialog if showDialog is true
+        // Show Add/Edit Dialog
         if (showDialog) {
             showAddVetDialog(
                 onDismiss = { showDialog = false },
                 onAddVet = { vetName, phoneNumber ->
-                    saveVetToFirestore(
-                        vetName = vetName,
-                        phoneNumber = phoneNumber,
-                        petId = petDetails?.petId ?: "",
-                        onSuccess = {
-                            fetchVetDetails(
-                                petDetails?.vetId ?: ""
-                            ) // Explicitly fetch new vet details
-                            showDialog = false
-                        },
-                        onFailure = { e ->
-                            println("Error saving vet: ${e.message}")
-                        }
-                    )
-                }
+                    if (isEditing) {
+                        // Update Firestore with new vet details
+                        FirebaseFirestore.getInstance()
+                            .collection("vets")
+                            .document(editVetDetails.vetId)
+                            .update(
+                                mapOf(
+                                    "vetName" to vetName,
+                                    "phoneNumber" to phoneNumber
+                                )
+                            )
+                            .addOnSuccessListener {
+                                fetchVetDetails(editVetDetails.vetId) // Refresh details
+                                showDialog = false
+                            }
+                            .addOnFailureListener { e ->
+                                println("Error updating vet: ${e.message}")
+                            }
+                    } else {
+                        // Add a new vet
+                        saveVetToFirestore(
+                            vetName = vetName,
+                            phoneNumber = phoneNumber,
+                            petId = petDetails?.petId ?: "",
+                            onSuccess = {
+                                fetchVetDetails(petDetails?.vetId ?: "")
+                                showDialog = false
+                            },
+                            onFailure = { e ->
+                                println("Error saving vet: ${e.message}")
+                            }
+                        )
+                    }
+                },
+                defaultName = if (isEditing) editVetDetails.vetName else "",
+                defaultPhone = if (isEditing) editVetDetails.phoneNumber else ""
             )
         }
     }
 }
-
 
 fun fetchVetDetails(vetId: String) {
     FirebaseFirestore.getInstance().collection("vets").document(vetId)
@@ -280,17 +318,19 @@ fun fetchVetDetails(vetId: String) {
 @Composable
 fun showAddVetDialog(
     onDismiss: () -> Unit,
-    onAddVet: (String, String) -> Unit
+    onAddVet: (String, String) -> Unit,
+    defaultName: String = "", // Default name for editing
+    defaultPhone: String = "" // Default phone for editing
 ) {
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(defaultName) }
+    var phone by remember { mutableStateOf(defaultPhone) }
 
     // Check if the Add button should be enabled
     val isAddEnabled = name.isNotBlank() && phone.isNotBlank()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Vet") },
+        title = { Text(if (defaultName.isNotEmpty()) "Edit Vet" else "Add Vet") },
         text = {
             Column {
                 TextField(
@@ -310,7 +350,7 @@ fun showAddVetDialog(
                 onClick = { onAddVet(name, phone) },
                 enabled = isAddEnabled // Disable Add button if condition is not met
             ) {
-                Text("Add")
+                Text(if (defaultName.isNotEmpty()) "Save" else "Add")
             }
         },
         dismissButton = {
