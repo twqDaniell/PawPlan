@@ -104,6 +104,9 @@ fun FoodAllergiesSection(
 
     // Popup for Adding Allergy
     if (showDialog) {
+        // Determine if the Save button should be enabled
+        val isSaveEnabled = newAllergyName.isNotBlank()
+
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title = { Text(text = "Add Allergy") },
@@ -137,7 +140,8 @@ fun FoodAllergiesSection(
                                 Log.e("FoodAllergiesSection", "Error saving allergy: ${e.message}")
                             }
                         }
-                    }
+                    },
+                    enabled = isSaveEnabled // Disable Save button if condition is not met
                 ) {
                     Text("Save")
                 }
@@ -150,7 +154,6 @@ fun FoodAllergiesSection(
         )
     }
 }
-
 
 suspend fun fetchAllergiesForPet(petId: String): List<Allergy> {
     val firestore = FirebaseFirestore.getInstance()
