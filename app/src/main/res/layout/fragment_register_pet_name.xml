@@ -18,6 +18,7 @@
         android:backgroundTint="#FFFFFF"
         android:text="Back"
         android:textColor="#B3839A"
+        android:fontFamily="@font/latoregular"
         android:textSize="15dp"
         app:iconTint="@color/black"
         app:layout_constraintStart_toStartOf="parent"
@@ -35,7 +36,7 @@
         app:cardBackgroundColor="#EFEFF4">
 
         <ImageView
-            android:id="@+id/catButton"
+            android:id="@+id/catDogImage"
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:src="@drawable/cat_icon"
@@ -67,6 +68,7 @@
                 android:layout_height="wrap_content"
                 android:hint="Your Pet's Name"
                 android:padding="12dp"
+                android:fontFamily="@font/latoregular"
                 android:textSize="16sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -91,6 +93,7 @@
                 android:layout_height="wrap_content"
                 android:hint="He/She"
                 android:padding="12dp"
+                android:fontFamily="@font/latoregular"
                 android:textSize="16sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -108,6 +111,7 @@
                 app:layout_constraintTop_toTopOf="parent"
                 android:layout_marginTop="20dp"
                 android:textSize="25dp"
+                android:fontFamily="@font/latobold"
                 android:textStyle="bold"
                 android:textColor="#B3839A"
                 />
@@ -121,6 +125,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 android:layout_marginTop="50dp"
+                android:fontFamily="@font/latoregular"
                 android:textSize="20dp"
                 android:textStyle="bold"
                 android:textColor="#B3839A"
@@ -135,7 +140,9 @@
                 app:layout_constraintTop_toTopOf="parent"
                 android:layout_marginTop="193dp"
                 android:backgroundTint="#E4AEC6"
+                android:fontFamily="@font/latobold"
                 android:textSize="17dp"
+                android:enabled="false"
                 android:text="Next" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

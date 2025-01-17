@@ -20,10 +20,10 @@ fun ProfileActionsSection(
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         Button(onClick = { showEditDialog = true }) {
-            Text("Edit Profile")
-        }
-        Button(onClick = { /* Lost Pet Logic */ }) {
-            Text("Lost My Pet")
+            Text(
+                text = "Edit Profile",
+                style = MaterialTheme.typography.labelLarge // Automatically uses your custom font
+            )
         }
     }
 
