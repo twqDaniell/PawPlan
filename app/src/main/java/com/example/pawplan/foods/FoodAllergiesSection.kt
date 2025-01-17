@@ -68,28 +68,35 @@ fun FoodAllergiesSection(
             }
         }
 
-        // List of Allergies
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            allergies.value.forEach { allergy ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close, // Allergy icon
-                        contentDescription = "Allergy",
-                        tint = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = allergy.allergyName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+        if (allergies.value.isEmpty()) {
+            Text(
+                text = "No allergies recorded",
+                style = MaterialTheme.typography.bodyMedium
+            )
+        } else {
+            // List of Allergies
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                allergies.value.forEach { allergy ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close, // Allergy icon
+                            contentDescription = "Allergy",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = allergy.allergyName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }
