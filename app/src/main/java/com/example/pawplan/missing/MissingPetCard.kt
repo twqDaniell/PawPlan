@@ -3,6 +3,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +23,8 @@ import java.util.Locale
 fun MissingPetCard(
     pet: MissingPetDetails,
     isMyPost: Boolean, // Determines if the delete button should be visible
-    onDelete: (MissingPetDetails) -> Unit
+    onDelete: (MissingPetDetails) -> Unit,
+    onEdit: (MissingPetDetails) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -58,8 +60,18 @@ fun MissingPetCard(
                 modifier = Modifier.weight(1f) // Ensures the name takes available space
             )
 
-            // Delete Button (Only visible if the user owns the post)
             if (isMyPost) {
+                IconButton(
+                    onClick = { onEdit(pet) },
+                    modifier = Modifier.size(24.dp) // Set size for a compact look
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit Post",
+                        tint = MaterialTheme.colorScheme.primary // Red color for the delete icon
+                    )
+                }
+
                 IconButton(
                     onClick = { onDelete(pet) },
                     modifier = Modifier.size(24.dp) // Set size for a compact look
@@ -71,6 +83,7 @@ fun MissingPetCard(
                     )
                 }
             }
+
         }
 
         Spacer(modifier = Modifier.height(4.dp))
