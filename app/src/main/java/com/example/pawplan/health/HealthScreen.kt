@@ -1,5 +1,6 @@
 package com.example.pawplan.health
 
+import FullPageLoader
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ data class VetVisit(
 fun HealthScreen(mainViewModel: MainViewModel) {
     val petDetails by mainViewModel.petDetails.collectAsState()
     val vetVisits = remember { mutableStateOf<List<VetVisit>>(emptyList()) }
+    val loading by mainViewModel.loading.collectAsState()
 
     petDetails?.let { pet ->
         LaunchedEffect(pet.petId) {
@@ -35,30 +37,45 @@ fun HealthScreen(mainViewModel: MainViewModel) {
             vetVisits.value = visits
         }
     }
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(32.dp)
-    ) {
-        HeaderSection(petDetails)
-        key(petDetails) {
-            VetInfoSection(
-                petDetails,
-                findLastVisit(vetVisits.value),
-                findNextVisit(vetVisits.value),
-                vetVisits.value.size,
-                mainViewModel
-            )
-        }
 
-        VaccinationRecordsSection(
-            vetVisits.value,
-            onAddVisit = { newVisit ->
-            vetVisits.value = vetVisits.value + newVisit },
-            petDetails?.petId ?: "Unknown"
-            )
+    FullPageLoader(isLoading = loading) {
+        if (petDetails != null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(32.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(32.dp)
+                ) {
+                    HeaderSection(petDetails)
+                    key(petDetails) {
+                        VetInfoSection(
+                            petDetails,
+                            findLastVisit(vetVisits.value),
+                            findNextVisit(vetVisits.value),
+                            vetVisits.value.size,
+                            mainViewModel
+                        )
+                    }
+
+                    VaccinationRecordsSection(
+                        vetVisits.value,
+                        onAddVisit = { newVisit ->
+                            vetVisits.value = vetVisits.value + newVisit },
+                        petDetails?.petId ?: "Unknown"
+                    )
+                }
+            }
+        }
     }
+
+
+
 }
 
 suspend fun fetchVetVisitsForPet(petId: String): List<VetVisit> {

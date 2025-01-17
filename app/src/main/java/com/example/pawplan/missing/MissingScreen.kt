@@ -36,10 +36,13 @@ fun MissingScreen(mainViewModel: MainViewModel) {
     var showEditPopup by remember { mutableStateOf(false) }
     var petToEdit by remember { mutableStateOf<MissingPetDetails?>(null) }
     var showOnlyMyPosts by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) } // Loading state for fetching missing pets
 
+    // Fetch missing pets when the screen is loaded
     LaunchedEffect(petDetails) {
-        var missingPetsVal = fetchMissingPets()
-        missingPets.value = missingPetsVal
+        isLoading = true // Start loading
+        missingPets.value = fetchMissingPets()
+        isLoading = false // Stop loading
     }
 
     val filteredMissingPets = if (showOnlyMyPosts) {
@@ -48,96 +51,106 @@ fun MissingScreen(mainViewModel: MainViewModel) {
         missingPets.value // Show all posts
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Header Section
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+    // Display a loader if loading, otherwise display the content
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Help other owners find their pets",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-            )
-            Button(
-                onClick = {
-                    selectedPetId = petDetails?.petId ?: "Unknown" // Default petId
-                    showPopup = true
-                },
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Text(text = "Lost My Pet")
-            }
+            CircularProgressIndicator()
         }
-
-        Row(
+    } else {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            Text(
-                text = if (showOnlyMyPosts) "Showing My Posts" else "Showing All Posts",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-            )
-            Switch(
-                checked = showOnlyMyPosts,
-                onCheckedChange = { showOnlyMyPosts = it }, // Update the state when toggled
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+            // Header Section
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Help other owners find their pets",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 )
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        val context = LocalContext.current
-
-        // Scrollable List of Missing Pets
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-             // Get the context inside the composable scope
-
-            items(filteredMissingPets) { pet ->
-                MissingPetCard(
-                    pet = pet,
-                    isMyPost = pet.ownerId == userId,
-                    onDelete = { petToDelete ->
-                        deletePost(
-                            postId = petToDelete.postId,
-                            onSuccess = {
-                                // Update the list to remove the deleted item
-                                missingPets.value = missingPets.value.filter { it.postId != petToDelete.postId }
-                                Toast.makeText(context, "Post deleted successfully", Toast.LENGTH_SHORT).show()
-                            },
-                            onFailure = { exception ->
-                                // Handle failure
-                                Toast.makeText(
-                                    context,
-                                    "Failed to delete post: ${exception.message}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        )
+                Button(
+                    onClick = {
+                        selectedPetId = petDetails?.petId ?: "Unknown" // Default petId
+                        showPopup = true
                     },
-                    onEdit = { pet ->
-                        petToEdit = pet // Assign the selected pet to petToEdit
-                        showEditPopup = true // Show the edit popup
-                    },
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text(text = "Lost My Pet")
+                }
+            }
+
+            // Toggle for showing only my posts
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (showOnlyMyPosts) "Showing My Posts" else "Showing All Posts",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 )
+                Switch(
+                    checked = showOnlyMyPosts,
+                    onCheckedChange = { showOnlyMyPosts = it }, // Update the state when toggled
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            val context = LocalContext.current
+
+            // Scrollable List of Missing Pets
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(filteredMissingPets) { pet ->
+                    MissingPetCard(
+                        pet = pet,
+                        isMyPost = pet.ownerId == userId,
+                        onDelete = { petToDelete ->
+                            deletePost(
+                                postId = petToDelete.postId,
+                                onSuccess = {
+                                    // Update the list to remove the deleted item
+                                    missingPets.value = missingPets.value.filter { it.postId != petToDelete.postId }
+                                    Toast.makeText(context, "Post deleted successfully", Toast.LENGTH_SHORT).show()
+                                },
+                                onFailure = { exception ->
+                                    // Handle failure
+                                    Toast.makeText(
+                                        context,
+                                        "Failed to delete post: ${exception.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            )
+                        },
+                        onEdit = { pet ->
+                            petToEdit = pet // Assign the selected pet to petToEdit
+                            showEditPopup = true // Show the edit popup
+                        },
+                    )
+                }
             }
         }
     }
 
+    // Report Missing Pet Popup
     if (showPopup) {
         ReportMissingPetPopup(
             petId = selectedPetId,
@@ -149,19 +162,19 @@ fun MissingScreen(mainViewModel: MainViewModel) {
                     onSuccess = { postId ->
                         println("Report saved successfully!")
                         missingPets.value += MissingPetDetails(
-                                                petDetails?.petId ?: "Unknown",
-                                        petDetails?.petName ?: "Unknown",
-                                        petDetails?.petBreed ?: "Unknown",
-                                        petDetails?.petWeight ?: 0,
-                                petDetails?.petColor ?: "Unknown",
+                            petDetails?.petId ?: "Unknown",
+                            petDetails?.petName ?: "Unknown",
+                            petDetails?.petBreed ?: "Unknown",
+                            petDetails?.petWeight ?: 0,
+                            petDetails?.petColor ?: "Unknown",
                             petDetails?.petBirthDate ?: Date(),
                             petDetails?.petAdoptionDate ?: Date(),
                             description,
                             Date(),
                             petDetails?.picture ?: "Unknown",
-                                                userDetails?.userName ?: "Unknown",
-                                                userDetails?.phoneNumber ?: "Unknown",
-                                                petDetails?.petType ?: "Unknown",
+                            userDetails?.userName ?: "Unknown",
+                            userDetails?.phoneNumber ?: "Unknown",
+                            petDetails?.petType ?: "Unknown",
                             userId.toString(),
                             postId
                         )
@@ -176,6 +189,7 @@ fun MissingScreen(mainViewModel: MainViewModel) {
         )
     }
 
+    // Edit Missing Pet Popup
     if (showEditPopup && petToEdit != null) {
         EditMissingPetPopup(
             petDetails = petToEdit!!,
