@@ -34,7 +34,7 @@ import com.example.pawplan.models.MainViewModel
 fun FoodImageSection(
     foodImageUrl: String?, // Nullable for cases where no image is uploaded
     onImageUpload: (Uri) -> Unit, // Callback for handling uploaded image URI
-    mainViewModel: MainViewModel = viewModel()
+    mainViewModel: MainViewModel
 ) {
     val context = LocalContext.current
     val petDetails by mainViewModel.petDetails.collectAsState()

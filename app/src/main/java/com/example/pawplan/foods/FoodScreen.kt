@@ -66,7 +66,8 @@ fun FoodScreen(
                         println("Image upload failed.")
                     }
                 }
-            }
+            },
+            mainViewModel
         )
 
         // Allergies Section
