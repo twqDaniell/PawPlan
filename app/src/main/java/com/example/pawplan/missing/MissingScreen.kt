@@ -13,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +24,9 @@ import com.example.pawplan.models.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
@@ -37,6 +41,9 @@ fun MissingScreen(mainViewModel: MainViewModel) {
     var petToEdit by remember { mutableStateOf<MissingPetDetails?>(null) }
     var showOnlyMyPosts by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) } // Loading state for fetching missing pets
+    var isRefreshing by remember { mutableStateOf(false) }
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+    val coroutineScope = rememberCoroutineScope()
 
     // Fetch missing pets when the screen is loaded
     LaunchedEffect(petDetails) {
@@ -113,6 +120,25 @@ fun MissingScreen(mainViewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
             val context = LocalContext.current
 
+            SwipeRefresh(
+                state = swipeRefreshState,
+                onRefresh = {
+                    coroutineScope.launch {
+                        isRefreshing = true
+                        try {
+                            // Fetch updated data
+                            val updatedList = fetchMissingPets() // Replace with your actual data-fetching logic
+                            missingPets.value = updatedList
+                            Log.d("SwipeRefresh", "Fetched Again")
+                        } catch (e: Exception) {
+                            Log.e("SwipeRefresh", "Error fetching data: ${e.message}")
+                        } finally {
+                            isRefreshing = false
+                        }
+                    }
+                }
+            ) {
+
             // Scrollable List of Missing Pets
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -147,6 +173,7 @@ fun MissingScreen(mainViewModel: MainViewModel) {
                     )
                 }
             }
+                }
         }
     }
 
