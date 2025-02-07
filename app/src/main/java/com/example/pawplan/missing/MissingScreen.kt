@@ -13,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,110 +24,185 @@ import com.example.pawplan.models.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
-fun MissingScreen(mainViewModel: MainViewModel = viewModel()) {
+fun MissingScreen(mainViewModel: MainViewModel) {
     var showPopup by remember { mutableStateOf(false) }
     var selectedPetId by remember { mutableStateOf("") }
     val petDetails by mainViewModel.petDetails.collectAsState()
     val userDetails by mainViewModel.userDetails.collectAsState()
     val userId = FirebaseAuth.getInstance().currentUser?.uid
     var missingPets = remember { mutableStateOf<List<MissingPetDetails>>(emptyList()) }
+    var showEditPopup by remember { mutableStateOf(false) }
+    var petToEdit by remember { mutableStateOf<MissingPetDetails?>(null) }
+    var showOnlyMyPosts by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) } // Loading state for fetching missing pets
+    var isRefreshing by remember { mutableStateOf(false) }
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+    val coroutineScope = rememberCoroutineScope()
 
+    // Fetch missing pets when the screen is loaded
     LaunchedEffect(petDetails) {
-        var missingPetsVal = fetchMissingPets()
-        missingPets.value = missingPetsVal
+        isLoading = true // Start loading
+        missingPets.value = fetchMissingPets()
+        isLoading = false // Stop loading
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Header Section
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+    val filteredMissingPets = if (showOnlyMyPosts) {
+        missingPets.value.filter { it.ownerId == userId } // Show only the user's posts
+    } else {
+        missingPets.value // Show all posts
+    }
+
+    // Display a loader if loading, otherwise display the content
+    if (isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "Help other owners find their pets",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-            )
-            Button(
-                onClick = {
-                    selectedPetId = petDetails?.petId ?: "Unknown" // Default petId
-                    showPopup = true
-                },
-                modifier = Modifier.padding(start = 8.dp)
-            ) {
-                Text(text = "Lost My Pet")
-            }
+            CircularProgressIndicator()
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-        val context = LocalContext.current
-
-        // Scrollable List of Missing Pets
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize()
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-             // Get the context inside the composable scope
+            // Header Section
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Help other owners find their pets",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                )
+                Button(
+                    onClick = {
+                        selectedPetId = petDetails?.petId ?: "Unknown" // Default petId
+                        showPopup = true
+                    },
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text(text = "Lost My Pet")
+                }
+            }
 
-            items(missingPets.value) { pet ->
-                MissingPetCard(
-                    pet = pet,
-                    isMyPost = pet.ownerId == userId,
-                    onDelete = { petToDelete ->
-                        deletePost(
-                            postId = petToDelete.postId,
-                            onSuccess = {
-                                // Update the list to remove the deleted item
-                                missingPets.value = missingPets.value.filter { it.postId != petToDelete.postId }
-                                Toast.makeText(context, "Post deleted successfully", Toast.LENGTH_SHORT).show()
-                            },
-                            onFailure = { exception ->
-                                // Handle failure
-                                Toast.makeText(
-                                    context,
-                                    "Failed to delete post: ${exception.message}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        )
-                    }
+            // Toggle for showing only my posts
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (showOnlyMyPosts) "Showing My Posts" else "Showing All Posts",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                )
+                Switch(
+                    checked = showOnlyMyPosts,
+                    onCheckedChange = { showOnlyMyPosts = it }, // Update the state when toggled
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        uncheckedThumbColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
                 )
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+            val context = LocalContext.current
+
+            SwipeRefresh(
+                state = swipeRefreshState,
+                onRefresh = {
+                    coroutineScope.launch {
+                        isRefreshing = true
+                        try {
+                            // Fetch updated data
+                            val updatedList = fetchMissingPets() // Replace with your actual data-fetching logic
+                            missingPets.value = updatedList
+                            Log.d("SwipeRefresh", "Fetched Again")
+                        } catch (e: Exception) {
+                            Log.e("SwipeRefresh", "Error fetching data: ${e.message}")
+                        } finally {
+                            isRefreshing = false
+                        }
+                    }
+                }
+            ) {
+
+            // Scrollable List of Missing Pets
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(filteredMissingPets) { pet ->
+                    MissingPetCard(
+                        pet = pet,
+                        isMyPost = pet.ownerId == userId,
+                        onDelete = { petToDelete ->
+                            deletePost(
+                                postId = petToDelete.postId,
+                                onSuccess = {
+                                    // Update the list to remove the deleted item
+                                    missingPets.value = missingPets.value.filter { it.postId != petToDelete.postId }
+                                    Toast.makeText(context, "Post deleted successfully", Toast.LENGTH_SHORT).show()
+                                },
+                                onFailure = { exception ->
+                                    // Handle failure
+                                    Toast.makeText(
+                                        context,
+                                        "Failed to delete post: ${exception.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            )
+                        },
+                        onEdit = { pet ->
+                            petToEdit = pet // Assign the selected pet to petToEdit
+                            showEditPopup = true // Show the edit popup
+                        },
+                    )
+                }
+            }
+                }
         }
     }
 
+    // Report Missing Pet Popup
     if (showPopup) {
         ReportMissingPetPopup(
             petId = selectedPetId,
             onDismiss = { showPopup = false },
-            onSave = { description ->
+            onSave = { description, imageUrl ->
                 saveMissingPetToFirestore(
                     petId = selectedPetId,
                     description = description,
+                    imageUrl = imageUrl,
                     onSuccess = { postId ->
                         println("Report saved successfully!")
                         missingPets.value += MissingPetDetails(
-                                                petDetails?.petId ?: "Unknown",
-                                        petDetails?.petName ?: "Unknown",
-                                        petDetails?.petBreed ?: "Unknown",
-                                        petDetails?.petWeight ?: 0,
-                                petDetails?.petColor ?: "Unknown",
+                            petDetails?.petId ?: "Unknown",
+                            petDetails?.petName ?: "Unknown",
+                            petDetails?.petBreed ?: "Unknown",
+                            petDetails?.petWeight ?: 0,
+                            petDetails?.petColor ?: "Unknown",
                             petDetails?.petBirthDate ?: Date(),
                             petDetails?.petAdoptionDate ?: Date(),
                             description,
                             Date(),
-                            petDetails?.picture ?: "Unknown",
-                                                userDetails?.userName ?: "Unknown",
-                                                userDetails?.phoneNumber ?: "Unknown",
-                                                petDetails?.petType ?: "Unknown",
+                            imageUrl,
+                            userDetails?.userName ?: "Unknown",
+                            userDetails?.phoneNumber ?: "Unknown",
+                            petDetails?.petType ?: "Unknown",
                             userId.toString(),
                             postId
                         )
@@ -140,14 +216,38 @@ fun MissingScreen(mainViewModel: MainViewModel = viewModel()) {
             mainViewModel
         )
     }
+
+    // Edit Missing Pet Popup
+    if (showEditPopup && petToEdit != null) {
+        EditMissingPetPopup(
+            petDetails = petToEdit!!,
+            onDismiss = { showEditPopup = false },
+            onSave = { updatedDetails ->
+                editPost(
+                    postId = petToEdit!!.postId,
+                    updatedDetails = updatedDetails,
+                    onSuccess = {
+                        // Update the local list
+                        missingPets.value = missingPets.value.map {
+                            if (it.postId == updatedDetails.postId) updatedDetails else it
+                        }
+                        showEditPopup = false
+                    },
+                    onFailure = { e ->
+                    }
+                )
+            }
+        )
+    }
 }
 
-fun saveMissingPetToFirestore(petId: String, description: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
+fun saveMissingPetToFirestore(petId: String, description: String, imageUrl: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
     val firestore = FirebaseFirestore.getInstance()
     val missingPetData = mapOf(
         "petId" to petId,
         "description" to description,
-        "lostDate" to Date() // Today's date
+        "lostDate" to Date(), // Today's date
+        "picture" to imageUrl
     )
     firestore.collection("missing")
         .add(missingPetData)
@@ -193,6 +293,7 @@ suspend fun fetchMissingPets(): List<MissingPetDetails> {
             val petId = missingDoc.getString("petId") ?: continue
             val description = missingDoc.getString("description") ?: "No description provided"
             val lostDate = missingDoc.getDate("lostDate") ?: continue
+            val picture = missingDoc.getString("picture") ?: continue
 
             // Fetch the corresponding pet details from the 'pets' collection
             val petDoc = firestore.collection("pets").document(petId).get().await()
@@ -204,7 +305,6 @@ suspend fun fetchMissingPets(): List<MissingPetDetails> {
                 val petColor = petDoc.getString("petColor") ?: "Unknown"
                 val petBirthday = petDoc.getDate("petBirthday") ?: Date()
                 val petAdoptionDate = petDoc.getDate("petAdoptionDate") ?: Date()
-                val petPicture = petDoc.getString("picture") ?: "Unknown"
                 val petType = petDoc.getString("petType") ?: "Unknown"
 
                 // Fetch owner details from the 'users' collection
@@ -228,7 +328,7 @@ suspend fun fetchMissingPets(): List<MissingPetDetails> {
                     lostDate = lostDate,
                     ownerName = ownerName,
                     phoneNumber = ownerPhoneNumber,
-                    picture = petPicture,
+                    picture = picture,
                     petType = petType,
                     ownerId = ownerId
                 )
@@ -260,3 +360,30 @@ fun deletePost(
             onFailure(exception) // Notify failure
         }
 }
+
+fun editPost(
+    postId: String,
+    updatedDetails: MissingPetDetails,
+    onSuccess: () -> Unit,
+    onFailure: (Exception) -> Unit
+) {
+    val db = FirebaseFirestore.getInstance()
+
+    // Update the missing pet details in the 'missing' collection
+    val updatedMissingData = mapOf(
+        "description" to updatedDetails.description
+    )
+
+    db.collection("missing")
+        .document(postId)
+        .update(updatedMissingData)
+        .addOnSuccessListener {
+            Log.d("EditPost", "Missing post updated successfully")
+            onSuccess()
+        }
+        .addOnFailureListener { e ->
+            Log.e("EditPost", "Error updating missing post", e)
+            onFailure(e) // Notify failure
+        }
+}
+

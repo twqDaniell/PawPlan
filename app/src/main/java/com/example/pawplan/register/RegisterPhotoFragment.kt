@@ -108,7 +108,7 @@ class RegisterPhotoFragment : Fragment() {
                 Log.d("Firestore", "User data saved successfully")
 
                 // Save pet data to the `pets` collection
-                savePetDataToFirestore(userId, photoUrl)
+                savePetDataToFirestore(photoUrl)
             }
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Error saving user data: ${e.message}", e)
@@ -116,7 +116,7 @@ class RegisterPhotoFragment : Fragment() {
             }
     }
 
-    private fun savePetDataToFirestore(ownerId: String, photoUrl: String) {
+    private fun savePetDataToFirestore(photoUrl: String) {
         val firestore = FirebaseFirestore.getInstance()
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -139,7 +139,7 @@ class RegisterPhotoFragment : Fragment() {
         firestore.collection("pets").document(petId)
             .set(petData)
             .addOnSuccessListener {
-                Log.d("Firestore", "Pet data saved successfully")
+                Log.d("Firestore", "Pet data saved successfully with ownerId: $ownerId")
                 navigateToMainActivity()
             }
             .addOnFailureListener { e ->

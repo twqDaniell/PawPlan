@@ -23,6 +23,7 @@ import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -44,17 +45,18 @@ class RegisterPetBreedFragment : Fragment() {
         val birthDateInput = view.findViewById<TextInputEditText>(R.id.birthDateInputEdit)
         val nextButton = view.findViewById<Button>(R.id.nameNextButton)
         val title = view.findViewById<TextView>(R.id.textViewBreed1)
+        val textInputLayout = view.findViewById<TextInputLayout>(R.id.textInputLayoutBreed)
         viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
 
         if(viewModel.petType == "dog") {
-            breedAutoComplete.hint = "Dog breed"
+            textInputLayout.hint = "Dog breed"
             if(viewModel.petGender == "He") {
                 title.text = "What type of dog is he?"
             } else {
                 title.text = "What type of dog is she?"
             }
         } else {
-            breedAutoComplete.hint = "Cat breed"
+            textInputLayout.hint = "Cat breed"
             if(viewModel.petGender == "He") {
                 title.text = "What type of cat is he?"
             } else {

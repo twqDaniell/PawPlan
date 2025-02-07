@@ -16,9 +16,10 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.pawplan.R
+import com.example.pawplan.models.PetDetails
 
 @Composable
-fun HeaderSection(petName: String) {
+fun HeaderSection(petDetails: PetDetails?) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -37,7 +38,7 @@ fun HeaderSection(petName: String) {
 
             // Subtitle
             Text(
-                text = "Stay in touch with ${petName}'s health records.",
+                text = "Stay in touch with ${petDetails?.petName}'s health records.",
                 style = MaterialTheme.typography.bodyMedium
             )
         }

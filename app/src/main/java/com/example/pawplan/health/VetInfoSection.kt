@@ -1,22 +1,27 @@
 package com.example.pawplan.health
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -30,6 +35,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.pawplan.models.MainViewModel
 import com.example.pawplan.models.PetDetails
 import com.example.pawplan.models.UserDetails
 import com.google.firebase.firestore.FirebaseFirestore
@@ -50,198 +57,245 @@ val vetDetails: StateFlow<VetDetails?> get() = _vetDetails
 
 @Composable
 fun VetInfoSection(
-    vetId: String,
+    petDetails: PetDetails?,
     lastVisit: VetVisit,
     nextVisit: VetVisit,
     numberOfVisits: Int,
-    weight: Int,
-    petId: String
+    mainViewModel: MainViewModel = viewModel()
 ) {
-    // State to control the visibility of the dialog
-    var showDialog by remember { mutableStateOf(false) }
+    val loading by mainViewModel.loading.collectAsState()
+    if (loading) {
+        CircularProgressIndicator()
+    } else {
+        // State to control the visibility of the Add/Edit dialog
+        var showDialog by remember { mutableStateOf(false) }
+        var isEditing by remember { mutableStateOf(false) }
+        var editVetDetails by remember { mutableStateOf(VetDetails()) }
 
-    // Launch the fetch operation
-    LaunchedEffect(vetId) {
-        fetchVetDetails(vetId)
-    }
+        // Collect the vet details state
+        val vetDetails by vetDetails.collectAsState()
 
-    // Collect the vet details state
-    val vetDetails by vetDetails.collectAsState()
+        // Fetch vet details when the vetId changes
+        LaunchedEffect(petDetails?.vetId) {
+            fetchVetDetails(petDetails?.vetId ?: "Unknown")
+        }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 32.dp, vertical = 16.dp) // Space around the content
-    ) {
-        // Check if vetDetails is null (empty state)
-        if (vetDetails == null) {
-            AddVetButton(onClick = { showDialog = true }) // Show dialog when clicked
-        } else {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween // Space between the two columns
-            ) {
-                // Left Column
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(16.dp), // Space between items
-                    horizontalAlignment = Alignment.Start // Align text to the left
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 32.dp, vertical = 16.dp)
+        ) {
+            if (vetDetails == null) {
+                AddVetButton(onClick = {
+                    isEditing = false
+                    showDialog = true
+                })
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // "Lilly's Vet" Title and Vet Name
-                    Text(
-                        text = "Lilly's Vet",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    )
-                    Text(
-                        text = vetDetails?.vetName ?: "Unknown name",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-
-                    // Last visited day
-                    Text(
-                        text = "Last visited day",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday,
-                            contentDescription = "Calendar Icon",
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
+                    // Left Column: Vet Details
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalAlignment = Alignment.Start
+                    ) {
                         Text(
-                            text = if (lastVisit.topic == "-") {
-                                "-"
-                            } else {
-                                SimpleDateFormat(
-                                    "dd/MM/yyyy",
-                                    Locale.getDefault()
-                                ).format(lastVisit.visitDate)
+                            text = "${petDetails?.petName}'s Vet",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        )
+                        Text(
+                            text = vetDetails?.vetName ?: "Unknown name",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = "Last visited day",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = "Calendar Icon",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (lastVisit.topic == "-") {
+                                    "-"
+                                } else {
+                                    SimpleDateFormat(
+                                        "dd/MM/yyyy",
+                                        Locale.getDefault()
+                                    ).format(lastVisit.visitDate)
+                                },
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                        Text(
+                            text = "Last weight check",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.FitnessCenter,
+                                contentDescription = "Weight Icon",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "${petDetails?.petWeight} kg",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+
+                    // Right Column: Additional Details and Edit Button
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        Text(
+                            text = "Vet Phone",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Phone,
+                                contentDescription = "Phone Icon",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = vetDetails?.phoneNumber ?: "Unknown number",
+                                style = MaterialTheme.typography.bodyLarge.copy(
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+                        Text(
+                            text = "Next Visit",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = "Calendar Icon",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (nextVisit.topic == "-") {
+                                    "-"
+                                } else {
+                                    SimpleDateFormat(
+                                        "dd/MM/yyyy",
+                                        Locale.getDefault()
+                                    ).format(nextVisit.visitDate)
+                                },
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                        Text(
+                            text = "Number of visits",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.MedicalServices,
+                                contentDescription = "Operations Icon",
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "$numberOfVisits",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+
+                        // Edit Button
+                        IconButton(
+                            onClick =  {
+                                isEditing = true
+                                editVetDetails = vetDetails ?: VetDetails() // Pre-fill with current vet details
+                                showDialog = true
                             },
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-
-                    // Last weight check
-                    Text(
-                        text = "Last weight check",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.FitnessCenter,
-                            contentDescription = "Weight Icon",
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${weight}",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                }
-
-                // Right Column
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(16.dp), // Space between items
-                    horizontalAlignment = Alignment.End // Align text to the right
-                ) {
-                    // Phone number
-                    Text(
-                        text = "Vet Phone",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    )
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Phone,
-                            contentDescription = "Phone Icon",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = vetDetails?.phoneNumber ?: "Unknown number",
-                            style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.primary)
-                        )
-                    }
-
-                    // Next Visit
-                    Text(
-                        text = "Next Visit",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday,
-                            contentDescription = "Calendar Icon",
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = if (nextVisit.topic == "-") {
-                                "-"
-                            } else {
-                                SimpleDateFormat(
-                                    "dd/MM/yyyy",
-                                    Locale.getDefault()
-                                ).format(nextVisit.visitDate)
-                            },
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-
-                    // Total operations done
-                    Text(
-                        text = "Number of visits",
-                        style = MaterialTheme.typography.bodySmall.copy(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.MedicalServices,
-                            contentDescription = "Operations Icon",
-                            modifier = Modifier.size(18.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "${numberOfVisits}",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
+                            modifier = Modifier.size(24.dp) // Set size for a compact look
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Post",
+                                tint = MaterialTheme.colorScheme.primary // Red color for the delete icon
+                            )
+                        }
                     }
                 }
             }
         }
-    }
 
-    // Show the Add Vet Dialog if showDialog is true
-    if (showDialog) {
-        showAddVetDialog(
-            onDismiss = { showDialog = false },
-            onAddVet = { vetName, phoneNumber ->
-                saveVetToFirestore(vetName, phoneNumber, petId)
-                showDialog = false
-            }
-        )
+        // Show Add/Edit Dialog
+        if (showDialog) {
+            showAddVetDialog(
+                onDismiss = { showDialog = false },
+                onAddVet = { vetName, phoneNumber ->
+                    if (isEditing) {
+                        // Update Firestore with new vet details
+                        FirebaseFirestore.getInstance()
+                            .collection("vets")
+                            .document(editVetDetails.vetId)
+                            .update(
+                                mapOf(
+                                    "vetName" to vetName,
+                                    "phoneNumber" to phoneNumber
+                                )
+                            )
+                            .addOnSuccessListener {
+                                fetchVetDetails(editVetDetails.vetId) // Refresh details
+                                showDialog = false
+                            }
+                            .addOnFailureListener { e ->
+                                println("Error updating vet: ${e.message}")
+                            }
+                    } else {
+                        // Add a new vet
+                        saveVetToFirestore(
+                            vetName = vetName,
+                            phoneNumber = phoneNumber,
+                            petId = petDetails?.petId ?: "",
+                            onSuccess = {
+                                fetchVetDetails(petDetails?.vetId ?: "")
+                                showDialog = false
+                            },
+                            onFailure = { e ->
+                                println("Error saving vet: ${e.message}")
+                            }
+                        )
+                    }
+                },
+                defaultName = if (isEditing) editVetDetails.vetName else "",
+                defaultPhone = if (isEditing) editVetDetails.phoneNumber else ""
+            )
+        }
     }
 }
-
 
 fun fetchVetDetails(vetId: String) {
     FirebaseFirestore.getInstance().collection("vets").document(vetId)
@@ -264,17 +318,19 @@ fun fetchVetDetails(vetId: String) {
 @Composable
 fun showAddVetDialog(
     onDismiss: () -> Unit,
-    onAddVet: (String, String) -> Unit
+    onAddVet: (String, String) -> Unit,
+    defaultName: String = "", // Default name for editing
+    defaultPhone: String = "" // Default phone for editing
 ) {
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(defaultName) }
+    var phone by remember { mutableStateOf(defaultPhone) }
 
     // Check if the Add button should be enabled
     val isAddEnabled = name.isNotBlank() && phone.isNotBlank()
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Vet") },
+        title = { Text(if (defaultName.isNotEmpty()) "Edit Vet" else "Add Vet") },
         text = {
             Column {
                 TextField(
@@ -294,7 +350,7 @@ fun showAddVetDialog(
                 onClick = { onAddVet(name, phone) },
                 enabled = isAddEnabled // Disable Add button if condition is not met
             ) {
-                Text("Add")
+                Text(if (defaultName.isNotEmpty()) "Save" else "Add")
             }
         },
         dismissButton = {

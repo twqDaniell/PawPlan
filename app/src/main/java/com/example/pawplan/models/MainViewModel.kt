@@ -1,11 +1,13 @@
 package com.example.pawplan.models
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.pawplan.externalAPI.RetrofitClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.util.Date
 import retrofit2.Call
 import retrofit2.Callback
@@ -28,7 +30,8 @@ data class PetDetails(
     val picture: String = "",
     val vetId: String = "",
     val foodImage: String = "",
-    val petType: String = ""
+    val petType: String = "",
+    val ownerId: String = ""
 )
 
 class MainViewModel : ViewModel() {
@@ -41,11 +44,15 @@ class MainViewModel : ViewModel() {
     private val _breeds = MutableStateFlow<List<String>>(emptyList())
     val breeds: StateFlow<List<String>> get() = _breeds
 
+    private val _loading = MutableStateFlow(true)
+    val loading: StateFlow<Boolean> get() = _loading
+
     init {
         fetchUserAndPetDetails()
     }
 
     fun fetchUserAndPetDetails() {
+        _loading.value = true
         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         // Fetch user details
@@ -59,41 +66,74 @@ class MainViewModel : ViewModel() {
                 }
             }
 
-        // Fetch pet details
         FirebaseFirestore.getInstance().collection("pets")
             .whereEqualTo("ownerId", userId)
-            .get()
+            .get(com.google.firebase.firestore.Source.SERVER)
             .addOnSuccessListener { documents ->
                 val firstPet = documents.documents.firstOrNull()
                 if (firstPet != null) {
-                    _petDetails.value = PetDetails(
-                        petId = firstPet.id,
-                        petName = firstPet.getString("petName") ?: "Unknown",
-                        petBreed = firstPet.getString("petBreed") ?: "Unknown",
-                        petWeight = (firstPet.getLong("petWeight") ?: 0).toInt(),
-                        petColor = firstPet.getString("petColor") ?: "Unknown",
-                        petBirthDate = firstPet.getDate("petBirthDate") ?: Date(0), // Fallback to epoch
-                        petAdoptionDate = firstPet.getDate("petAdoptionDate") ?: Date(0),
-                        picture = firstPet.getString("picture") ?: "",
-                        vetId = firstPet.getString("vetId") ?: "Unknown",
-                        foodImage = firstPet.getString("foodImage") ?: "Unknown",
-                        petType = firstPet.getString("petType") ?: "Unknown"
-                    )
+                    val fetchedWeight = (firstPet.getLong("petWeight") ?: 0).toInt()
+//                    if (_petDetails.value?.petWeight != fetchedWeight) { // Only update if data is new
+                        val updatedPetDetails = PetDetails(
+                            petId = firstPet.id,
+                            petName = firstPet.getString("petName") ?: "Unknown",
+                            petBreed = firstPet.getString("petBreed") ?: "Unknown",
+                            petWeight = fetchedWeight,
+                            petColor = firstPet.getString("petColor") ?: "Unknown",
+                            petBirthDate = firstPet.getDate("petBirthDate") ?: Date(0),
+                            petAdoptionDate = firstPet.getDate("petAdoptionDate") ?: Date(0),
+                            picture = firstPet.getString("picture") ?: "",
+                            vetId = firstPet.getString("vetId") ?: "Unknown",
+                            foodImage = firstPet.getString("foodImage") ?: "Unknown",
+                            petType = firstPet.getString("petType") ?: "Unknown",
+                            ownerId = firstPet.getString("ownerId") ?: "Unknown"
+                        )
+                        _petDetails.value = updatedPetDetails
+                        Log.d("Firestore Fetch", "Updated petDetails: $updatedPetDetails")
+//                    }
                 }
+                _loading.value = false
             }
+            .addOnFailureListener { e ->
+                Log.e("Firestore Fetch", "Error fetching pet details: ${e.message}")
+                _loading.value = false
+            }
+
     }
 
     fun updatePetDetails(updatedDetails: PetDetails) {
         val firestore = FirebaseFirestore.getInstance()
         firestore.collection("pets").document(updatedDetails.petId)
-            .set(updatedDetails)
+            .update(
+                mapOf(
+                    "petWeight" to updatedDetails.petWeight,
+                    "petName" to updatedDetails.petName,
+                    "petBreed" to updatedDetails.petBreed,
+                    "petColor" to updatedDetails.petColor,
+                    "petBirthDate" to updatedDetails.petBirthDate,
+                    "petAdoptionDate" to updatedDetails.petAdoptionDate,
+                    "picture" to updatedDetails.picture,
+                    "vetId" to updatedDetails.vetId,
+                    "foodImage" to updatedDetails.foodImage,
+                    "petType" to updatedDetails.petType,
+                    "ownerId" to updatedDetails.ownerId
+                )
+            )
             .addOnSuccessListener {
-                _petDetails.value = updatedDetails
+                _petDetails.value = updatedDetails.copy() // Update the state
+                // Delay fetching Firestore data
+//                kotlinx.coroutines.GlobalScope.launch {
+//                    kotlinx.coroutines.delay(500) // Adjust delay based on Firestore sync latency
+                    fetchUserAndPetDetails()
+//                }
+
+                Log.d("MainViewModel", petDetails.value?.petWeight.toString())
             }
             .addOnFailureListener { e ->
-                // Handle error (e.g., log or show a message)
+                Log.e("Firestore Update", "Error updating details: ${e.message}")
             }
     }
+
 
     fun fetchBreeds(onBreedsFetched: (List<String>) -> Unit) {
         val api = RetrofitClient.instance
