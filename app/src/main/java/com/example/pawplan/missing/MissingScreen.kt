@@ -13,6 +13,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +24,9 @@ import com.example.pawplan.models.MainViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
@@ -37,6 +41,9 @@ fun MissingScreen(mainViewModel: MainViewModel) {
     var petToEdit by remember { mutableStateOf<MissingPetDetails?>(null) }
     var showOnlyMyPosts by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(true) } // Loading state for fetching missing pets
+    var isRefreshing by remember { mutableStateOf(false) }
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+    val coroutineScope = rememberCoroutineScope()
 
     // Fetch missing pets when the screen is loaded
     LaunchedEffect(petDetails) {
@@ -113,6 +120,25 @@ fun MissingScreen(mainViewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
             val context = LocalContext.current
 
+            SwipeRefresh(
+                state = swipeRefreshState,
+                onRefresh = {
+                    coroutineScope.launch {
+                        isRefreshing = true
+                        try {
+                            // Fetch updated data
+                            val updatedList = fetchMissingPets() // Replace with your actual data-fetching logic
+                            missingPets.value = updatedList
+                            Log.d("SwipeRefresh", "Fetched Again")
+                        } catch (e: Exception) {
+                            Log.e("SwipeRefresh", "Error fetching data: ${e.message}")
+                        } finally {
+                            isRefreshing = false
+                        }
+                    }
+                }
+            ) {
+
             // Scrollable List of Missing Pets
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -147,6 +173,7 @@ fun MissingScreen(mainViewModel: MainViewModel) {
                     )
                 }
             }
+                }
         }
     }
 
@@ -155,10 +182,11 @@ fun MissingScreen(mainViewModel: MainViewModel) {
         ReportMissingPetPopup(
             petId = selectedPetId,
             onDismiss = { showPopup = false },
-            onSave = { description ->
+            onSave = { description, imageUrl ->
                 saveMissingPetToFirestore(
                     petId = selectedPetId,
                     description = description,
+                    imageUrl = imageUrl,
                     onSuccess = { postId ->
                         println("Report saved successfully!")
                         missingPets.value += MissingPetDetails(
@@ -171,7 +199,7 @@ fun MissingScreen(mainViewModel: MainViewModel) {
                             petDetails?.petAdoptionDate ?: Date(),
                             description,
                             Date(),
-                            petDetails?.picture ?: "Unknown",
+                            imageUrl,
                             userDetails?.userName ?: "Unknown",
                             userDetails?.phoneNumber ?: "Unknown",
                             petDetails?.petType ?: "Unknown",
@@ -213,12 +241,13 @@ fun MissingScreen(mainViewModel: MainViewModel) {
     }
 }
 
-fun saveMissingPetToFirestore(petId: String, description: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
+fun saveMissingPetToFirestore(petId: String, description: String, imageUrl: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
     val firestore = FirebaseFirestore.getInstance()
     val missingPetData = mapOf(
         "petId" to petId,
         "description" to description,
-        "lostDate" to Date() // Today's date
+        "lostDate" to Date(), // Today's date
+        "picture" to imageUrl
     )
     firestore.collection("missing")
         .add(missingPetData)
@@ -264,6 +293,7 @@ suspend fun fetchMissingPets(): List<MissingPetDetails> {
             val petId = missingDoc.getString("petId") ?: continue
             val description = missingDoc.getString("description") ?: "No description provided"
             val lostDate = missingDoc.getDate("lostDate") ?: continue
+            val picture = missingDoc.getString("picture") ?: continue
 
             // Fetch the corresponding pet details from the 'pets' collection
             val petDoc = firestore.collection("pets").document(petId).get().await()
@@ -275,7 +305,6 @@ suspend fun fetchMissingPets(): List<MissingPetDetails> {
                 val petColor = petDoc.getString("petColor") ?: "Unknown"
                 val petBirthday = petDoc.getDate("petBirthday") ?: Date()
                 val petAdoptionDate = petDoc.getDate("petAdoptionDate") ?: Date()
-                val petPicture = petDoc.getString("picture") ?: "Unknown"
                 val petType = petDoc.getString("petType") ?: "Unknown"
 
                 // Fetch owner details from the 'users' collection
@@ -299,7 +328,7 @@ suspend fun fetchMissingPets(): List<MissingPetDetails> {
                     lostDate = lostDate,
                     ownerName = ownerName,
                     phoneNumber = ownerPhoneNumber,
-                    picture = petPicture,
+                    picture = picture,
                     petType = petType,
                     ownerId = ownerId
                 )
