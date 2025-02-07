@@ -1,35 +1,43 @@
 package com.example.pawplan.missing
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberImagePainter
 import com.example.pawplan.models.MainViewModel
-import com.example.pawplan.profile.PetDetailsSection
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 @Composable
 fun ReportMissingPetPopup(
     petId: String,
     onDismiss: () -> Unit,
-    onSave: (String) -> Unit,
+    onSave: (String, String) -> Unit, // Updated to include image URL
     mainViewModel: MainViewModel = viewModel()
 ) {
     var description by remember { mutableStateOf("") }
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var uploadedImageUrl by remember { mutableStateOf("") }
+    var isUploading by remember { mutableStateOf(false) }
 
-    // Condition to enable or disable the Post button
-    val isPostEnabled = description.isNotBlank()
+    // Image Picker Launcher
+    val imagePicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        imageUri = uri
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -37,13 +45,33 @@ fun ReportMissingPetPopup(
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                PetDetailsSection(mainViewModel)
-                Text(
-                    text = "Tell people a bit about when and where you lost your pet",
-                    style = MaterialTheme.typography.bodySmall
-                )
+                // Image Upload Section
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .clickable { imagePicker.launch("image/*") },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (imageUri != null) {
+                        Image(
+                            painter = rememberImagePainter(imageUri),
+                            contentDescription = "Selected Image",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(120.dp)
+                                .clip(CircleShape)
+                        )
+                    } else {
+                        Text("Tap to upload photo", color = Color.Gray)
+                    }
+                }
+
+                // Description Field
+                Text("Tell people where and when you lost your pet", style = MaterialTheme.typography.bodySmall)
                 OutlinedTextField(
                     value = description,
                     onValueChange = { description = it },
@@ -55,12 +83,22 @@ fun ReportMissingPetPopup(
         confirmButton = {
             Button(
                 onClick = {
-                    onSave(description)
-                    onDismiss()
+                    if (imageUri != null) {
+                        isUploading = true
+                        uploadImageToFirebase(imageUri!!) { imageUrl ->
+                            uploadedImageUrl = imageUrl
+                            onSave(description, uploadedImageUrl)
+                            onDismiss()
+                            isUploading = false
+                        }
+                    } else {
+                        onSave(description, "")
+                        onDismiss()
+                    }
                 },
-                enabled = isPostEnabled // Enable/disable Post button
+                enabled = description.isNotBlank() && !isUploading
             ) {
-                Text("Post")
+                Text(if (isUploading) "Uploading..." else "Post")
             }
         },
         dismissButton = {
@@ -69,4 +107,21 @@ fun ReportMissingPetPopup(
             }
         }
     )
+}
+
+// Function to upload the image to Firebase Storage
+fun uploadImageToFirebase(imageUri: Uri, onUploadSuccess: (String) -> Unit) {
+    val storageRef = FirebaseStorage.getInstance().reference
+    val fileName = "missing_pets/${UUID.randomUUID()}.jpg"
+    val fileRef = storageRef.child(fileName)
+
+    fileRef.putFile(imageUri)
+        .addOnSuccessListener {
+            fileRef.downloadUrl.addOnSuccessListener { uri ->
+                onUploadSuccess(uri.toString())
+            }
+        }
+        .addOnFailureListener {
+            println("Image upload failed: ${it.message}")
+        }
 }

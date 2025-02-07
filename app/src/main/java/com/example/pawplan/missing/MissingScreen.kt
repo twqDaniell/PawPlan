@@ -182,10 +182,11 @@ fun MissingScreen(mainViewModel: MainViewModel) {
         ReportMissingPetPopup(
             petId = selectedPetId,
             onDismiss = { showPopup = false },
-            onSave = { description ->
+            onSave = { description, imageUrl ->
                 saveMissingPetToFirestore(
                     petId = selectedPetId,
                     description = description,
+                    imageUrl = imageUrl,
                     onSuccess = { postId ->
                         println("Report saved successfully!")
                         missingPets.value += MissingPetDetails(
@@ -198,7 +199,7 @@ fun MissingScreen(mainViewModel: MainViewModel) {
                             petDetails?.petAdoptionDate ?: Date(),
                             description,
                             Date(),
-                            petDetails?.picture ?: "Unknown",
+                            imageUrl,
                             userDetails?.userName ?: "Unknown",
                             userDetails?.phoneNumber ?: "Unknown",
                             petDetails?.petType ?: "Unknown",
@@ -240,12 +241,13 @@ fun MissingScreen(mainViewModel: MainViewModel) {
     }
 }
 
-fun saveMissingPetToFirestore(petId: String, description: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
+fun saveMissingPetToFirestore(petId: String, description: String, imageUrl: String, onSuccess: (String) -> Unit, onFailure: (Exception) -> Unit) {
     val firestore = FirebaseFirestore.getInstance()
     val missingPetData = mapOf(
         "petId" to petId,
         "description" to description,
-        "lostDate" to Date() // Today's date
+        "lostDate" to Date(), // Today's date
+        "picture" to imageUrl
     )
     firestore.collection("missing")
         .add(missingPetData)
@@ -291,6 +293,7 @@ suspend fun fetchMissingPets(): List<MissingPetDetails> {
             val petId = missingDoc.getString("petId") ?: continue
             val description = missingDoc.getString("description") ?: "No description provided"
             val lostDate = missingDoc.getDate("lostDate") ?: continue
+            val picture = missingDoc.getString("picture") ?: continue
 
             // Fetch the corresponding pet details from the 'pets' collection
             val petDoc = firestore.collection("pets").document(petId).get().await()
@@ -302,7 +305,6 @@ suspend fun fetchMissingPets(): List<MissingPetDetails> {
                 val petColor = petDoc.getString("petColor") ?: "Unknown"
                 val petBirthday = petDoc.getDate("petBirthday") ?: Date()
                 val petAdoptionDate = petDoc.getDate("petAdoptionDate") ?: Date()
-                val petPicture = petDoc.getString("picture") ?: "Unknown"
                 val petType = petDoc.getString("petType") ?: "Unknown"
 
                 // Fetch owner details from the 'users' collection
@@ -326,7 +328,7 @@ suspend fun fetchMissingPets(): List<MissingPetDetails> {
                     lostDate = lostDate,
                     ownerName = ownerName,
                     phoneNumber = ownerPhoneNumber,
-                    picture = petPicture,
+                    picture = picture,
                     petType = petType,
                     ownerId = ownerId
                 )
