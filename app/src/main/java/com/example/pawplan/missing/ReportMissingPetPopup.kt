@@ -52,7 +52,6 @@ fun ReportMissingPetPopup(
                 Box(
                     modifier = Modifier
                         .size(120.dp)
-                        .clip(CircleShape)
                         .clickable { imagePicker.launch("image/*") },
                     contentAlignment = Alignment.Center
                 ) {
