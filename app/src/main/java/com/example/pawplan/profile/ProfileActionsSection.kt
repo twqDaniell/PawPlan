@@ -22,7 +22,7 @@ fun ProfileActionsSection(
         Button(onClick = { showEditDialog = true }) {
             Text(
                 text = "Edit Profile",
-                style = MaterialTheme.typography.labelLarge // Automatically uses your custom font
+                style = MaterialTheme.typography.labelLarge
             )
         }
     }

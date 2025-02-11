@@ -34,6 +34,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun PetDetailsSection(mainViewModel: MainViewModel = viewModel()) {
@@ -48,6 +49,7 @@ fun PetDetailsSection(mainViewModel: MainViewModel = viewModel()) {
         AsyncImage(
             model = petDetails?.picture ?: R.drawable.placeholder,
             contentDescription = "Pet Image",
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(120.dp)
                 .clip(CircleShape)
@@ -61,8 +63,6 @@ fun PetDetailsSection(mainViewModel: MainViewModel = viewModel()) {
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.Bold
         )
-
-        Spacer(modifier = Modifier.height(8.dp))
 
         // Pet Details
         if (userDetails != null && petDetails != null) {

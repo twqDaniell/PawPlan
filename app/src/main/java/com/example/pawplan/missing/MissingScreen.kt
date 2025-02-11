@@ -369,10 +369,15 @@ fun editPost(
 ) {
     val db = FirebaseFirestore.getInstance()
 
-    // Update the missing pet details in the 'missing' collection
-    val updatedMissingData = mapOf(
+    // Prepare updated data including the optional picture
+    val updatedMissingData = mutableMapOf<String, Any>(
         "description" to updatedDetails.description
     )
+
+    // Only update the picture if it's not null or empty
+    updatedDetails.picture.takeIf { !it.isNullOrEmpty() }?.let {
+        updatedMissingData["picture"] = it
+    }
 
     db.collection("missing")
         .document(postId)
@@ -386,4 +391,5 @@ fun editPost(
             onFailure(e) // Notify failure
         }
 }
+
 

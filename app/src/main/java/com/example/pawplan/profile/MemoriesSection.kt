@@ -27,6 +27,7 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.UUID
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun MemoriesSection(petId: String, petName: String) {
@@ -137,9 +138,9 @@ fun MemoriesSection(petId: String, petName: String) {
                                 .error(R.drawable.placeholder)
                                 .build(),
                             contentDescription = "Memory Image",
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(100.dp)
-                                .clip(RectangleShape)
                         )
                     }
                 }
