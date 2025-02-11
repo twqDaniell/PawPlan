@@ -32,6 +32,7 @@ fun ProfileScreen(mainViewModel: MainViewModel) {
                 }
             )
         }
+        Spacer(modifier = Modifier.height(12.dp))
         MemoriesSection(petDetails?.petId ?: "UnknownPetId", petDetails?.petName ?: "Unknown name")
     }
 }
