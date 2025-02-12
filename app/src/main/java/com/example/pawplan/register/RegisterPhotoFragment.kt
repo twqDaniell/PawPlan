@@ -9,19 +9,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.example.pawplan.MainActivity
 import com.example.pawplan.R
-import com.example.pawplan.models.RegistrationViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 
 class RegisterPhotoFragment : Fragment() {
-    private lateinit var viewModel: RegistrationViewModel
     private var selectedImageUri: Uri? = null
+    private lateinit var progressBar: ProgressBar
 
     companion object {
         private const val IMAGE_PICK_CODE = 1001
@@ -32,10 +32,11 @@ class RegisterPhotoFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_register_photo, container, false)
-        viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
 
         val photoImageView = view.findViewById<ImageView>(R.id.circlePhoto)
         val doneButton = view.findViewById<Button>(R.id.doneButton)
+        doneButton.isEnabled = false
+        progressBar = view.findViewById(R.id.registerProgressBar)
 
         // Handle image selection
         photoImageView.setOnClickListener {
@@ -49,6 +50,8 @@ class RegisterPhotoFragment : Fragment() {
             if (selectedImageUri == null) {
                 Toast.makeText(requireContext(), "Please select a photo", Toast.LENGTH_SHORT).show()
             } else {
+                progressBar.visibility = View.VISIBLE
+                doneButton.isEnabled = false
                 uploadImageAndSaveData(selectedImageUri!!)
             }
         }
@@ -61,6 +64,7 @@ class RegisterPhotoFragment : Fragment() {
         if (requestCode == IMAGE_PICK_CODE && data != null && data.data != null) {
             selectedImageUri = data.data
             view?.findViewById<ImageView>(R.id.circlePhoto)?.setImageURI(selectedImageUri)
+            view?.findViewById<Button>(R.id.doneButton)?.isEnabled = true
         }
     }
 
@@ -73,7 +77,6 @@ class RegisterPhotoFragment : Fragment() {
             .addOnSuccessListener {
                 fileRef.downloadUrl.addOnSuccessListener { downloadUrl ->
                     val photoUrl = downloadUrl.toString()
-                    viewModel.petPicture = photoUrl // Save the photo URL to ViewModel
                     saveDataToFirestore(photoUrl)
                 }.addOnFailureListener { e ->
                     Log.e("FirebaseStorage", "Failed to get download URL: ${e.message}", e)
@@ -87,48 +90,55 @@ class RegisterPhotoFragment : Fragment() {
     }
 
     private fun saveDataToFirestore(photoUrl: String) {
-        val firestore = FirebaseFirestore.getInstance()
+        val args = RegisterPhotoFragmentArgs.fromBundle(requireArguments())
+        val auth = FirebaseAuth.getInstance()
 
-        // Get the current user's UID
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
-        if (userId == null) {
-            Toast.makeText(requireContext(), "User not authenticated", Toast.LENGTH_SHORT).show()
-            return
+        val user = auth.currentUser
+
+        if(user != null) {
+            val userId = user.uid // ✅ Get the new user's UID
+
+            val userRef = FirebaseFirestore.getInstance().collection("users").document(userId)
+
+            val userData = hashMapOf(
+                "name" to args.userName,
+                "phone_number" to args.phoneNumber,
+            )
+
+            userRef.set(userData)
+                .addOnSuccessListener {
+                    Log.d("Firestore", "User registered and authenticated")
+
+                    // ✅ Keep the user authenticated
+                    auth.updateCurrentUser(auth.currentUser!!)
+                        .addOnSuccessListener {
+                            Log.d("Auth", "User session persisted")
+                            savePetDataToFirestore(photoUrl)
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("Auth", "Session persistence failed: ${e.message}", e)
+                        }
+                }
+                .addOnFailureListener { e ->
+                    Log.e("Firestore", "Error saving user data: ${e.message}", e)
+                }
         }
-
-        // Save user data to the `users` collection
-        val userData = hashMapOf(
-            "name" to viewModel.userName,
-            "phone_number" to viewModel.phoneNumber,
-        )
-
-        firestore.collection("users").document(userId)
-            .set(userData)
-            .addOnSuccessListener {
-                Log.d("Firestore", "User data saved successfully")
-
-                // Save pet data to the `pets` collection
-                savePetDataToFirestore(photoUrl)
-            }
-            .addOnFailureListener { e ->
-                Log.e("Firestore", "Error saving user data: ${e.message}", e)
-                Toast.makeText(requireContext(), "Error saving user data: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
     }
 
     private fun savePetDataToFirestore(photoUrl: String) {
         val firestore = FirebaseFirestore.getInstance()
         val ownerId = FirebaseAuth.getInstance().currentUser?.uid
+        val args = RegisterPhotoFragmentArgs.fromBundle(requireArguments())
 
         val petData = hashMapOf(
-            "petName" to viewModel.petName,
-            "petType" to viewModel.petType,
-            "petGender" to viewModel.petGender,
-            "petBreed" to viewModel.petBreed,
-            "petBirthDate" to viewModel.petBirthDate,
-            "petWeight" to viewModel.petWeight,
-            "petColor" to viewModel.petColor,
-            "petAdoptionDate" to viewModel.petAdoptionDate,
+            "petName" to args.petName,
+            "petType" to args.petType,
+            "petGender" to args.petGender,
+            "petBreed" to args.petBreed,
+            "petBirthDate" to args.petBirthDate,
+            "petWeight" to args.petWeight,
+            "petColor" to args.petColor,
+            "petAdoptionDate" to args.petAdoptionDate,
             "picture" to photoUrl,
             "ownerId" to ownerId
         )
@@ -140,17 +150,47 @@ class RegisterPhotoFragment : Fragment() {
             .set(petData)
             .addOnSuccessListener {
                 Log.d("Firestore", "Pet data saved successfully with ownerId: $ownerId")
-                navigateToMainActivity()
+
+                val action = RegisterPhotoFragmentDirections
+                    .actionRegisterPhotoFragmentToProfileFragment(
+                        args.userName,
+                        args.phoneNumber,
+                        args.petName,
+                        args.petType,
+                        args.petBreed,
+                        args.petWeight.toString(),
+                        args.petColor,
+                        args.petBirthDate,
+                        args.petAdoptionDate,
+                        "",
+                        "",
+                        petId,
+                        photoUrl
+                    )
+
+                val mainActivity = requireActivity() as MainActivity
+                mainActivity.petNameGlobal = args.petName
+                mainActivity.userNameGlobal = args.userName
+                mainActivity.phoneNumberGlobal = args.phoneNumber
+                mainActivity.petTypeGlobal = args.petType
+                mainActivity.petBreedGlobal = args.petBreed
+                mainActivity.petWeightGlobal = args.petWeight
+                mainActivity.petColorGlobal = args.petColor
+                mainActivity.petBirthDateGlobal = args.petBirthDate
+                mainActivity.petAdoptionDateGlobal = args.petAdoptionDate
+                mainActivity.petIdGlobal = petId
+                mainActivity.petPictureGlobal = photoUrl
+                mainActivity.vetIdGlobal = ""
+                mainActivity.foodImageGlobal = ""
+
+                progressBar.visibility = View.GONE
+
+                findNavController().navigate(action)
+                (requireActivity() as MainActivity).showBars()
             }
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Error saving pet data: ${e.message}", e)
                 Toast.makeText(requireContext(), "Error saving pet data: ${e.message}", Toast.LENGTH_SHORT).show()
             }
-    }
-
-    private fun navigateToMainActivity() {
-        val intent = Intent(requireContext(), MainActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-        startActivity(intent)
     }
 }

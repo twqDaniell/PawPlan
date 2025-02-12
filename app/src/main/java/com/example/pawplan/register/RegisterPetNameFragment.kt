@@ -10,29 +10,26 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageView
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.pawplan.R
-import com.example.pawplan.models.RegistrationViewModel
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
 
 class RegisterPetNameFragment : Fragment() {
-    private lateinit var viewModel: RegistrationViewModel
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_register_pet_name, container, false)
-        viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
         val petName = view.findViewById<TextInputEditText>(R.id.textInputEditTextPetName)
         val genderAutoComplete = view.findViewById<MaterialAutoCompleteTextView>(R.id.autoCompleteTextViewGender)
         val petTypeImage = view.findViewById<ImageView>(R.id.catDogImage)
         val nextButton = view.findViewById<Button>(R.id.nameNextButton)
 
-        if(viewModel.petType == "dog") {
+        val args = RegisterPetNameFragmentArgs.fromBundle(requireArguments())
+
+        if(args.petType == "dog") {
             petTypeImage.setImageResource(R.drawable.dog_icon)
         } else {
             petTypeImage.setImageResource(R.drawable.cat_icon)
@@ -43,13 +40,19 @@ class RegisterPetNameFragment : Fragment() {
         genderAutoComplete.setAdapter(adapter)
 
         view.findViewById<Button>(R.id.backButton)?.setOnClickListener {
-            findNavController().navigate(R.id.action_registerPetNameFragment_to_registerPetTypeFragment)
+            val action = RegisterPetNameFragmentDirections
+                .actionRegisterPetNameFragmentToRegisterPetTypeFragment(
+                    args.phoneNumber, args.userName
+                )
+            findNavController().navigate(action)
         }
 
         nextButton.setOnClickListener {
-            viewModel.petName = petName.text.toString()
-            viewModel.petGender = genderAutoComplete.text.toString()
-            findNavController().navigate(R.id.action_registerPetNameFragment_to_registerPetBreedFragment)
+            val action = RegisterPetNameFragmentDirections
+                .actionRegisterPetNameFragmentToRegisterPetBreedFragment(
+                    args.phoneNumber, args.userName, args.petType, petName.text.toString(), genderAutoComplete.text.toString()
+                )
+            findNavController().navigate(action)
         }
 
         var isGenderSelected = false;

@@ -9,10 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.pawplan.R
-import com.example.pawplan.models.RegistrationViewModel
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
@@ -24,7 +22,6 @@ import java.util.Locale
 
 class RegisterDetailsFragment : Fragment() {
     private var selectedDate: Date? = null
-    private lateinit var viewModel: RegistrationViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -36,7 +33,8 @@ class RegisterDetailsFragment : Fragment() {
         val adoptionDateInput = view.findViewById<TextInputEditText>(R.id.textInputEditTextAdoptionDate)
         val weight = view.findViewById<TextInputEditText>(R.id.textInputEditTextWeight)
         val nextButton = view.findViewById<Button>(R.id.nameNextButton)
-        viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
+
+        val args = RegisterDetailsFragmentArgs.fromBundle(requireArguments())
 
         val colors = listOf("Brown", "Black", "White", "Orange", "Gray", "Multicolor")
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, colors)
@@ -51,14 +49,19 @@ class RegisterDetailsFragment : Fragment() {
         }
 
         view.findViewById<Button>(R.id.backButton)?.setOnClickListener {
-            findNavController().navigate(R.id.action_registerDetailsFragment_to_registerPetBreedFragment)
+            val action = RegisterDetailsFragmentDirections
+                .actionRegisterDetailsFragmentToRegisterPetBreedFragment(
+                    args.phoneNumber, args.userName, args.petType, args.petName, args.petGender
+                )
+            findNavController().navigate(action)
         }
 
         view.findViewById<Button>(R.id.nameNextButton)?.setOnClickListener {
-            viewModel.petAdoptionDate = selectedDate
-            viewModel.petWeight = weight.text.toString().toInt()
-            viewModel.petColor = colorAutoComplete.text.toString()
-            findNavController().navigate(R.id.action_registerDetailsFragment_to_registerPhotoFragment)
+            val action = RegisterDetailsFragmentDirections
+                .actionRegisterDetailsFragmentToRegisterPhotoFragment(
+                    args.phoneNumber, args.userName, args.petType, args.petName, args.petBreed, args.petGender, args.petBirthDate, weight.text.toString().toInt(), colorAutoComplete.text.toString(), selectedDate.toString()
+                )
+            findNavController().navigate(action)
         }
 
         var isColorSelected = false

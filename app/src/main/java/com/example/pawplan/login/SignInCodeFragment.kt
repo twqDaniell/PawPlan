@@ -14,11 +14,10 @@ import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.example.pawplan.MainActivity
 import com.example.pawplan.R
-import com.example.pawplan.models.RegistrationViewModel
-import com.example.pawplan.register.RegisterActivity
+import com.example.pawplan.foods.FoodFragmentArgs
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthProvider
@@ -28,7 +27,6 @@ private lateinit var auth: FirebaseAuth
 private lateinit var db: FirebaseFirestore
 
 class SignInCodeFragment : Fragment() {
-    private lateinit var viewModel: RegistrationViewModel
     private lateinit var progressBar: ProgressBar
 
     override fun onCreateView(
@@ -51,7 +49,10 @@ class SignInCodeFragment : Fragment() {
 
         setupInputMovements(codeInputs)
 
-        val verificationId = arguments?.getString("verificationId")
+        val args = SignInCodeFragmentArgs.fromBundle(requireArguments())
+
+        val verificationId = args.verificationId
+        val phoneNumber = args.phoneNumber
         val verifyButton = view.findViewById<Button>(R.id.button2)
 
         val textWatcher = object : TextWatcher {
@@ -89,7 +90,6 @@ class SignInCodeFragment : Fragment() {
                     auth.signInWithCredential(credential)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                val phoneNumber = arguments?.getString("phoneNumber")
                                 checkUserByPhoneNumber(phoneNumber)
                             } else {
                                 progressBar.visibility = View.GONE
@@ -139,34 +139,88 @@ class SignInCodeFragment : Fragment() {
     }
 
     private fun checkUserByPhoneNumber(phoneNumber: String?) {
+        if (phoneNumber == null) {
+            Toast.makeText(requireContext(), "Phone number is null", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         progressBar.visibility = View.VISIBLE
 
-        db.collection("users")
-            .whereEqualTo("phone_number", phoneNumber)
-            .get()
-            .addOnSuccessListener { documents ->
-                progressBar.visibility = View.GONE
-                if (!documents.isEmpty) {
-                    Log.d("Firestore", "User found with phone number: $phoneNumber")
-                    startActivity(Intent(requireContext(), MainActivity::class.java))
-                    requireActivity().finish()
-                } else {
-                    Log.d("Firestore", "No user found with phone number: $phoneNumber")
-                    viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
-                    viewModel.phoneNumber = phoneNumber
-                    Log.d("SignInCodeFragment", "Phone number saved in ViewModel: ${viewModel.phoneNumber}")
+        val usersRef = FirebaseFirestore.getInstance().collection("users")
+        usersRef.whereEqualTo("phone_number", phoneNumber).get()
+            .addOnSuccessListener { userDocs ->
+                if (!userDocs.isEmpty) {
+                    val userDoc = userDocs.documents[0]
+                    val userName = userDoc.getString("name") ?: "Unknown"
+                    val userId = userDoc.id // This is the `ownerId` in pets collection
 
-                    val intent = Intent(requireContext(), RegisterActivity::class.java).apply {
-                        putExtra("phoneNumber", phoneNumber)
-                    }
-                    startActivity(intent)
-                    requireActivity().finish()
+                    // ✅ Fetch pet details using `ownerId`
+                    fetchPetDetails(userId, userName, phoneNumber)
+                } else {
+                    progressBar.visibility = View.GONE
+
+                    val action = SignInCodeFragmentDirections
+                        .actionSignInCodeFragmentToRegisterNameFragment(
+                            phoneNumber
+                        )
+                    findNavController().navigate(action)
                 }
             }
             .addOnFailureListener { e ->
                 progressBar.visibility = View.GONE
-                Log.e("Firestore", "Error checking user existence: ${e.message}", e)
-                Toast.makeText(requireContext(), "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("Firestore", "Error fetching user: ${e.message}", e)
+            }
+    }
+
+    private fun fetchPetDetails(ownerId: String, userName: String, phoneNumber: String) {
+        val petsRef = FirebaseFirestore.getInstance().collection("pets")
+        petsRef.whereEqualTo("ownerId", ownerId).get()
+            .addOnSuccessListener { petDocs ->
+                progressBar.visibility = View.GONE
+                if (!petDocs.isEmpty) {
+                    val petDoc = petDocs.documents[0]
+                    val petName = petDoc.getString("petName") ?: "Unknown"
+                    val petType = petDoc.getString("petType") ?: "Unknown"
+                    val petBreed = petDoc.getString("petBreed") ?: "Unknown"
+                    val petWeight = petDoc.getLong("petWeight")?.toInt() ?: 0
+                    val petColor = petDoc.getString("petColor") ?: "Unknown"
+                    val petBirthDate = petDoc.getString("petBirthDate").toString() ?: "Unknown"
+                    val petAdoptionDate = petDoc.getString("petAdoptionDate").toString() ?: "Unknown"
+                    val foodImage = petDoc.getString("foodImage") ?: ""
+                    val vetId = petDoc.getString("vetId") ?: ""
+                    val petId = petDoc.id
+                    val petPicture = petDoc.getString("picture") ?: ""
+
+                    // ✅ Use SafeArgs to pass data to ProfileFragment
+                    val action = SignInCodeFragmentDirections
+                        .actionSignInCodeFragmentToProfileFragment(
+                            userName, phoneNumber, petName, petType, petBreed,
+                            petWeight.toString(), petColor, petBirthDate, petAdoptionDate, foodImage, vetId, petId, petPicture
+                        )
+                    findNavController().navigate(action)
+
+                    val mainActivity = requireActivity() as MainActivity
+                    mainActivity.showBars()
+                    mainActivity.petIdGlobal = petId
+                    mainActivity.petNameGlobal = petName
+                    mainActivity.petBreedGlobal = petBreed
+                    mainActivity.petWeightGlobal = petWeight
+                    mainActivity.petPictureGlobal = petPicture
+                    mainActivity.petColorGlobal = petColor
+                    mainActivity.petTypeGlobal = petType
+                    mainActivity.petBirthDateGlobal = petBirthDate
+                    mainActivity.petAdoptionDateGlobal = petAdoptionDate
+                    mainActivity.userNameGlobal = userName
+                    mainActivity.phoneNumberGlobal = phoneNumber
+                    mainActivity.vetIdGlobal = vetId
+                    mainActivity.foodImageGlobal = foodImage
+                } else {
+                    Toast.makeText(requireContext(), "No pets found for this user", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                progressBar.visibility = View.GONE
+                Log.e("Firestore", "Error fetching pet: ${e.message}", e)
             }
     }
 }

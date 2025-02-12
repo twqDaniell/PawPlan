@@ -8,29 +8,31 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.pawplan.R
-import com.example.pawplan.models.RegistrationViewModel
+import com.example.pawplan.login.SignInCodeFragmentArgs
+import com.example.pawplan.login.SignInCodeFragmentDirections
 import com.google.android.material.textfield.TextInputEditText
 
 class RegisterNameFragment : Fragment() {
-    private lateinit var viewModel: RegistrationViewModel
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_register_name, container, false)
-        viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
 
         val nameInput = view.findViewById<TextInputEditText>(R.id.nameInput)
         val nextButton = view.findViewById<Button>(R.id.nameNextButton)
 
+        val args = RegisterNameFragmentArgs.fromBundle(requireArguments())
+
         nextButton.setOnClickListener {
-            viewModel.userName = nameInput.text.toString()
-            findNavController().navigate(R.id.action_registerNameFragment_to_registerPetTypeFragment)
+            val action = RegisterNameFragmentDirections
+                .actionRegisterNameFragmentToRegisterPetTypeFragment(
+                    args.phoneNumber, nameInput.text.toString()
+                )
+            findNavController().navigate(action)
         }
 
         val textWatcher = object : TextWatcher {

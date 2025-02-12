@@ -12,12 +12,11 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.pawplan.R
 import com.example.pawplan.externalAPI.RetrofitClient
 import com.example.pawplan.models.BreedsResponse
-import com.example.pawplan.models.RegistrationViewModel
+import com.example.pawplan.models.CatBreed
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
@@ -33,7 +32,6 @@ import java.util.Locale
 
 class RegisterPetBreedFragment : Fragment() {
     private var selectedDate: Date? = null
-    private lateinit var viewModel: RegistrationViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -46,18 +44,19 @@ class RegisterPetBreedFragment : Fragment() {
         val nextButton = view.findViewById<Button>(R.id.nameNextButton)
         val title = view.findViewById<TextView>(R.id.textViewBreed1)
         val textInputLayout = view.findViewById<TextInputLayout>(R.id.textInputLayoutBreed)
-        viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
 
-        if(viewModel.petType == "dog") {
+        val args = RegisterPetBreedFragmentArgs.fromBundle(requireArguments())
+
+        if(args.petType == "dog") {
             textInputLayout.hint = "Dog breed"
-            if(viewModel.petGender == "He") {
+            if(args.petGender == "He") {
                 title.text = "What type of dog is he?"
             } else {
                 title.text = "What type of dog is she?"
             }
         } else {
             textInputLayout.hint = "Cat breed"
-            if(viewModel.petGender == "He") {
+            if(args.petGender == "He") {
                 title.text = "What type of cat is he?"
             } else {
                 title.text = "What type of cat is she?"
@@ -72,19 +71,25 @@ class RegisterPetBreedFragment : Fragment() {
             }
         }
 
-        fetchBreeds { breeds ->
+        fetchBreeds ({ breeds ->
             val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, breeds)
             breedAutoComplete.setAdapter(adapter)
-        }
+        }, args.petType )
 
         view.findViewById<Button>(R.id.backButton)?.setOnClickListener {
-            findNavController().navigate(R.id.action_registerPetBreedFragment_to_registerPetNameFragment)
+            val action = RegisterPetBreedFragmentDirections
+                .actionRegisterPetBreedFragmentToRegisterPetNameFragment(
+                    args.phoneNumber, args.userName, args.petType
+                )
+            findNavController().navigate(action)
         }
 
         nextButton.setOnClickListener {
-            viewModel.petBreed = breedAutoComplete.text.toString()
-            viewModel.petBirthDate = selectedDate
-            findNavController().navigate(R.id.action_registerPetBreedFragment_to_registerPetDetailsFragment)
+            val action = RegisterPetBreedFragmentDirections
+                .actionRegisterPetBreedFragmentToRegisterPetDetailsFragment(
+                    args.phoneNumber, args.userName, args.petType, args.petName, breedAutoComplete.text.toString(), args.petGender, selectedDate.toString()
+                )
+            findNavController().navigate(action)
         }
 
         var isBreedSelected = false
@@ -145,23 +150,39 @@ class RegisterPetBreedFragment : Fragment() {
         }
     }
 
-    private fun fetchBreeds(onBreedsFetched: (List<String>) -> Unit) {
-        val api = RetrofitClient.instance
-        api.getBreeds().enqueue(object : Callback<BreedsResponse> {
-            override fun onResponse(call: Call<BreedsResponse>, response: Response<BreedsResponse>) {
-                if (response.isSuccessful) {
-                    val breedsMap = response.body()?.message ?: emptyMap()
-                    val breeds = breedsMap.keys.toList()
-                    onBreedsFetched(breeds)
-                } else {
-                    Toast.makeText(requireContext(), "Failed to fetch breeds", Toast.LENGTH_SHORT).show()
+    private fun fetchBreeds(onBreedsFetched: (List<String>) -> Unit, petType: String) {
+        if (petType == "dog") {
+            RetrofitClient.dogApi.getBreeds().enqueue(object : Callback<BreedsResponse> {
+                override fun onResponse(call: Call<BreedsResponse>, response: Response<BreedsResponse>) {
+                    if (response.isSuccessful) {
+                        val breeds = response.body()?.message?.keys?.toList() ?: emptyList()
+                        onBreedsFetched(breeds)
+                    } else {
+                        Toast.makeText(requireContext(), "Failed to fetch dog breeds", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            }
 
-            override fun onFailure(call: Call<BreedsResponse>, t: Throwable) {
-                Log.e("DogApi", "Error fetching breeds", t)
-                Toast.makeText(requireContext(), "Error fetching breeds: ${t.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
+                override fun onFailure(call: Call<BreedsResponse>, t: Throwable) {
+                    Log.e("API_ERROR", "Error fetching dog breeds", t)
+                    Toast.makeText(requireContext(), "Error fetching breeds: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+        } else {
+            RetrofitClient.catApi.getBreeds().enqueue(object : Callback<List<CatBreed>> {
+                override fun onResponse(call: Call<List<CatBreed>>, response: Response<List<CatBreed>>) {
+                    if (response.isSuccessful) {
+                        val breeds = response.body()?.map { it.name } ?: emptyList()
+                        onBreedsFetched(breeds)
+                    } else {
+                        Toast.makeText(requireContext(), "Failed to fetch cat breeds", Toast.LENGTH_SHORT).show()
+                    }
+                }
+
+                override fun onFailure(call: Call<List<CatBreed>>, t: Throwable) {
+                    Log.e("API_ERROR", "Error fetching cat breeds", t)
+                    Toast.makeText(requireContext(), "Error fetching breeds: ${t.message}", Toast.LENGTH_SHORT).show()
+                }
+            })
+        }
     }
 }

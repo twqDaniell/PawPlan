@@ -7,13 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.pawplan.R
-import com.example.pawplan.models.RegistrationViewModel
+import com.example.pawplan.login.SignInCodeFragmentArgs
 
 class RegisterPetTypeFragment : Fragment() {
-    private lateinit var viewModel: RegistrationViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -21,20 +19,30 @@ class RegisterPetTypeFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_register_pet_type, container, false)
-        viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
+        val args = RegisterPetTypeFragmentArgs.fromBundle(requireArguments())
 
         view.findViewById<ImageView>(R.id.catButton)?.setOnClickListener {
-            viewModel.petType = "cat"
-            findNavController().navigate(R.id.action_registerPetTypeFragment_to_registerPetNameFragment)
+            val action = RegisterPetTypeFragmentDirections
+                .actionRegisterPetTypeFragmentToRegisterPetNameFragment(
+                    args.phoneNumber, args.userName, "cat"
+                )
+            findNavController().navigate(action)
         }
 
         view.findViewById<ImageView>(R.id.dogButton)?.setOnClickListener {
-            viewModel.petType = "dog"
-            findNavController().navigate(R.id.action_registerPetTypeFragment_to_registerPetNameFragment)
+            val action = RegisterPetTypeFragmentDirections
+                .actionRegisterPetTypeFragmentToRegisterPetNameFragment(
+                    args.phoneNumber, args.userName, "dog"
+                )
+            findNavController().navigate(action)
         }
 
         view.findViewById<Button>(R.id.backButton)?.setOnClickListener {
-            findNavController().navigate(R.id.action_registerPetTypeFragment_to_registerNameFragment)
+            val action = RegisterPetTypeFragmentDirections
+                .actionRegisterPetTypeFragmentToRegisterNameFragment(
+                    args.phoneNumber
+                )
+            findNavController().navigate(action)
         }
 
         return view

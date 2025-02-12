@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("com.google.gms.google-services")
+    id("androidx.navigation.safeargs")
 }
 
 android {
@@ -61,6 +62,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.compose.material:material-icons-extended:1.5.3")
+    implementation(libs.volley)
 
     // Debugging tools for Compose
     debugImplementation(libs.androidx.compose.ui.tooling)
@@ -88,5 +90,5 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
     implementation("com.google.accompanist:accompanist-swiperefresh:0.28.0")
-
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 }

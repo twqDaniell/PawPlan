@@ -99,15 +99,11 @@ class SignInFormFragment : Fragment() {
                             // Code sent successfully
                             Log.d("PhoneAuth", "Code sent successfully. Verification ID: $verificationId")
 
-                            // Navigate to the next fragment
-                            val bundle = Bundle().apply {
-                                putString("verificationId", verificationId)
-                                putString("phoneNumber", formattedPhoneNumber)
-                            }
-                            findNavController().navigate(
-                                R.id.action_signInFormFragment_to_signInCodeFragment,
-                                bundle
-                            )
+                            val action = SignInFormFragmentDirections
+                                .actionSignInFormFragmentToSignInCodeFragment(
+                                    phoneNumber, verificationId
+                                )
+                            findNavController().navigate(action)
 
                             progressBar.visibility = View.GONE
                             sendCodeButton.visibility = View.VISIBLE
