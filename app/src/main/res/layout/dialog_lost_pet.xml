@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="20dp"
+    android:orientation="vertical"
+    android:background="@android:color/white">
+
+    <!-- 📌 Picture Upload -->
+    <ImageView
+        android:id="@+id/missingPetImage"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/placeholder"
+        android:background="@android:color/darker_gray"
+        android:contentDescription="Missing Pet Image"/>
+
+    <Button
+        android:id="@+id/selectImageButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Select Image"
+        style="@style/Widget.Material3.Button.IconButton.Filled"
+        android:backgroundTint="@color/white"
+        android:textColor="@color/primaryColor"
+        android:layout_marginTop="10dp"/>
+
+    <!-- 📌 Outlined Description Input -->
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="Enter description"
+        app:boxStrokeColor="@color/primaryColor"
+        app:boxBackgroundMode="outline">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editMissingDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="100dp"
+            android:padding="10dp"
+            android:gravity="top"
+            android:background="@android:color/white"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- 📌 Progress Bar (Initially Hidden) -->
+    <ProgressBar
+        android:id="@+id/uploadProgressBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        style="@android:style/Widget.Material.ProgressBar.Horizontal"
+        android:indeterminate="true"
+        android:layout_marginTop="12dp" />
+
+</LinearLayout>

@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:startDestination="@id/signInFormFragment">
+
+    <fragment
+        android:id="@+id/signInFormFragment"
+        android:name="com.example.pawplan.login.SignInFormFragment"
+        android:label="Sign In Form"
+        tools:layout="@layout/fragment_sign_in_form">
+        <action
+            android:id="@+id/action_signInFormFragment_to_signInCodeFragment"
+            app:destination="@id/signInCodeFragment">
+        <argument android:name="phoneNumber" app:argType="string" />
+        <argument android:name="verificationId" app:argType="string" />
+        </action>
+        <action
+            android:id="@+id/action_signInFormFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/signInCodeFragment"
+        android:name="com.example.pawplan.login.SignInCodeFragment"
+        android:label="Sign In Code" >
+        <action
+            android:id="@+id/action_signInCodeFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+        <action
+            android:id="@+id/action_signInCodeFragment_to_registerNameFragment"
+            app:destination="@id/registerName" />
+
+        <argument android:name="phoneNumber" app:argType="string" />
+        <argument android:name="verificationId" app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerName"
+        android:name="com.example.pawplan.register.RegisterNameFragment"
+        android:label="Register Name">
+
+        <action
+            android:id="@+id/action_registerNameFragment_to_registerPetTypeFragment"
+            app:destination="@id/registerPetTypeFragment">
+            <argument android:name="phoneNumber" app:argType="string" />
+            <argument android:name="userName" app:argType="string" />
+        </action>
+
+        <argument android:name="phoneNumber" app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerPetTypeFragment"
+        android:name="com.example.pawplan.register.RegisterPetTypeFragment"
+        android:label="Register Pet Type" >
+
+        <action
+            android:id="@+id/action_registerPetTypeFragment_to_registerPetNameFragment"
+            app:destination="@id/registerPetNameFragment">
+            <argument android:name="phoneNumber" app:argType="string" />
+            <argument android:name="userName" app:argType="string" />
+            <argument android:name="petType" app:argType="string" />
+        </action>
+
+        <action
+            android:id="@+id/action_registerPetTypeFragment_to_registerNameFragment"
+            app:destination="@id/registerName" />
+
+        <argument android:name="phoneNumber" app:argType="string" />
+        <argument android:name="userName" app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerPetNameFragment"
+        android:name="com.example.pawplan.register.RegisterPetNameFragment"
+        android:label="Register Pet Name" >
+
+        <action
+            android:id="@+id/action_registerPetNameFragment_to_registerPetTypeFragment"
+            app:destination="@id/registerPetTypeFragment" />
+
+        <action
+            android:id="@+id/action_registerPetNameFragment_to_registerPetBreedFragment"
+            app:destination="@id/registerPetBreedFragment">
+            <argument android:name="phoneNumber" app:argType="string" />
+            <argument android:name="userName" app:argType="string" />
+            <argument android:name="petType" app:argType="string" />
+            <argument android:name="petName" app:argType="string" />
+            <argument android:name="petGender" app:argType="string" />
+        </action>
+
+        <argument android:name="phoneNumber" app:argType="string" />
+        <argument android:name="userName" app:argType="string" />
+        <argument android:name="petType" app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerPetBreedFragment"
+        android:name="com.example.pawplan.register.RegisterPetBreedFragment"
+        android:label="Register Pet Breed" >
+
+        <action
+            android:id="@+id/action_registerPetBreedFragment_to_registerPetNameFragment"
+            app:destination="@id/registerPetNameFragment" />
+
+        <action
+            android:id="@+id/action_registerPetBreedFragment_to_registerPetDetailsFragment"
+            app:destination="@id/registerDetailsFragment" >
+            <argument android:name="phoneNumber" app:argType="string" />
+            <argument android:name="userName" app:argType="string" />
+            <argument android:name="petType" app:argType="string" />
+            <argument android:name="petName" app:argType="string" />
+            <argument android:name="petBreed" app:argType="string" />
+            <argument android:name="petGender" app:argType="string" />
+            <argument android:name="petBirthDate" app:argType="string" />
+        </action>
+
+        <argument android:name="phoneNumber" app:argType="string" />
+        <argument android:name="userName" app:argType="string" />
+        <argument android:name="petType" app:argType="string" />
+        <argument android:name="petName" app:argType="string" />
+        <argument android:name="petGender" app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerDetailsFragment"
+        android:name="com.example.pawplan.register.RegisterDetailsFragment"
+        android:label="Register Details" >
+
+        <action
+            android:id="@+id/action_registerDetailsFragment_to_registerPetBreedFragment"
+            app:destination="@id/registerPetBreedFragment" />
+
+        <action
+            android:id="@+id/action_registerDetailsFragment_to_registerPhotoFragment"
+            app:destination="@id/registerPhotoFragment">
+            <argument android:name="phoneNumber" app:argType="string" />
+            <argument android:name="userName" app:argType="string" />
+            <argument android:name="petType" app:argType="string" />
+            <argument android:name="petName" app:argType="string" />
+            <argument android:name="petBreed" app:argType="string" />
+            <argument android:name="petGender" app:argType="string" />
+            <argument android:name="petBirthDate" app:argType="string" />
+            <argument android:name="petWeight" app:argType="integer" />
+            <argument android:name="petColor" app:argType="string" />
+            <argument android:name="petAdoptionDate" app:argType="string" />
+        </action>
+
+        <argument android:name="phoneNumber" app:argType="string" />
+        <argument android:name="userName" app:argType="string" />
+        <argument android:name="petType" app:argType="string" />
+        <argument android:name="petName" app:argType="string" />
+        <argument android:name="petBreed" app:argType="string" />
+        <argument android:name="petGender" app:argType="string" />
+        <argument android:name="petBirthDate" app:argType="string" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/registerPhotoFragment"
+        android:name="com.example.pawplan.register.RegisterPhotoFragment"
+        android:label="Register Photo" >
+
+        <action
+            android:id="@+id/action_registerPhotoFragment_to_profileFragment"
+            app:destination="@id/profileFragment" />
+
+        <action
+            android:id="@+id/action_registerPhotoFragment_to_registerDetailsFragment"
+            app:destination="@id/registerDetailsFragment" />
+
+        <argument android:name="phoneNumber" app:argType="string" />
+        <argument android:name="userName" app:argType="string" />
+        <argument android:name="petType" app:argType="string" />
+        <argument android:name="petName" app:argType="string" />
+        <argument android:name="petBreed" app:argType="string" />
+        <argument android:name="petGender" app:argType="string" />
+        <argument android:name="petBirthDate" app:argType="string" />
+        <argument android:name="petWeight" app:argType="integer" />
+        <argument android:name="petColor" app:argType="string" />
+        <argument android:name="petAdoptionDate" app:argType="string" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_profileFragment"
+        app:destination="@id/profileFragment" />
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.example.pawplan.profile.ProfileFragment">
+
+        <argument android:name="userName" app:argType="string" />
+        <argument android:name="phoneNumber" app:argType="string" />
+        <argument android:name="petName" app:argType="string" />
+        <argument android:name="petType" app:argType="string" />
+        <argument android:name="petBreed" app:argType="string" />
+        <argument android:name="petWeight" app:argType="string" />
+        <argument android:name="petColor" app:argType="string" />
+        <argument android:name="petBirthDate" app:argType="string" />
+        <argument android:name="petAdoptionDate" app:argType="string" />
+        <argument android:name="foodImage" app:argType="string" />
+        <argument android:name="vetId" app:argType="string" />
+        <argument android:name="petId" app:argType="string" />
+        <argument android:name="petPicture" app:argType="string" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_healthFragment"
+        app:destination="@id/healthFragment" />
+
+    <fragment
+        android:id="@+id/healthFragment"
+        android:name="com.example.pawplan.health.HealthFragment">
+
+        <argument android:name="petName" app:argType="string" />
+        <argument android:name="petBreed" app:argType="string" />
+        <argument android:name="petWeight" app:argType="integer" />
+        <argument android:name="vetId" app:argType="string" />
+        <argument android:name="petId" app:argType="string" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_missingFragment"
+        app:destination="@id/missingFragment" />
+
+    <fragment
+        android:id="@+id/missingFragment"
+        android:name="com.example.pawplan.missing.MissingFragment">
+
+        <argument android:name="petId" app:argType="string" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_foodFragment"
+        app:destination="@id/foodFragment" />
+
+    <fragment
+        android:id="@+id/foodFragment"
+        android:name="com.example.pawplan.foods.FoodFragment">
+
+        <argument android:name="petId" app:argType="string" />
+        <argument android:name="petName" app:argType="string" />
+        <argument android:name="foodImage" app:argType="string" />
+    </fragment>
+</navigation>

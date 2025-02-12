@@ -1,0 +1,86 @@
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    android:background="@android:color/white">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- Pet Image -->
+        <ImageView
+            android:id="@+id/missingPetImage"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:scaleType="centerCrop"
+            android:background="@android:color/darker_gray"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <!-- Pet Name -->
+            <TextView
+                android:id="@+id/missingPetName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Pet Name"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/primaryColor"/>
+
+            <!-- Edit & Delete Icons (Only for User's Own Posts) -->
+            <ImageButton
+                android:id="@+id/editPostButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_edit"
+                android:visibility="gone"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+
+            <ImageButton
+                android:id="@+id/deletePostButton"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_delete"
+                android:visibility="gone"
+                android:background="?attr/selectableItemBackgroundBorderless"/>
+        </LinearLayout>
+
+        <!-- Pet Details -->
+        <TextView
+            android:id="@+id/missingPetDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Brown Pug Dog"
+            android:textSize="14sp"
+            android:textColor="@color/black"/>
+
+        <!-- Lost Date -->
+        <TextView
+            android:id="@+id/lostDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lost on: 07/02/2025"
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="4dp"/>
+
+        <!-- Description -->
+        <TextView
+            android:id="@+id/missingPetDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Description of the missing pet..."
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="4dp"/>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
