@@ -22,43 +22,63 @@ import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+private lateinit var registrationViewModel: RegistrationViewModel
+
 class RegisterDetailsFragment : Fragment() {
     private var selectedDate: Date? = null
-    private lateinit var viewModel: RegistrationViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+        registrationViewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
         val view = inflater.inflate(R.layout.fragment_register_details, container, false)
         val colorAutoComplete = view.findViewById<MaterialAutoCompleteTextView>(R.id.autoCompleteTextViewColor)
         val adoptionDateInput = view.findViewById<TextInputEditText>(R.id.textInputEditTextAdoptionDate)
         val weight = view.findViewById<TextInputEditText>(R.id.textInputEditTextWeight)
         val nextButton = view.findViewById<Button>(R.id.nameNextButton)
-        viewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
+
+        val args = RegisterDetailsFragmentArgs.fromBundle(requireArguments())
 
         val colors = listOf("Brown", "Black", "White", "Orange", "Gray", "Multicolor")
         val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, colors)
         colorAutoComplete.setAdapter(adapter)
 
+        registrationViewModel.petColor.observe(viewLifecycleOwner) { color ->
+            colorAutoComplete.setText(color)
+        }
+        registrationViewModel.petWeight.observe(viewLifecycleOwner) { weightText ->
+            weight.setText(weightText.toString())
+        }
+        registrationViewModel.petAdoptionDate.observe(viewLifecycleOwner) { adoptionDate ->
+            adoptionDateInput.setText(adoptionDate)
+        }
+
         adoptionDateInput.setOnClickListener {
             showDatePicker { date ->
-                selectedDate = date // Save the selected Date
+                selectedDate = date
                 val formattedDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(date)
-                adoptionDateInput.setText(formattedDate) // Set the formatted date in the TextInputEditText
+                adoptionDateInput.setText(formattedDate)
             }
         }
 
         view.findViewById<Button>(R.id.backButton)?.setOnClickListener {
-            findNavController().navigate(R.id.action_registerDetailsFragment_to_registerPetBreedFragment)
+            val action = RegisterDetailsFragmentDirections
+                .actionRegisterDetailsFragmentToRegisterPetBreedFragment(
+                    args.phoneNumber, args.userName, args.petType, args.petName, args.petGender
+                )
+            findNavController().navigate(action)
         }
 
         view.findViewById<Button>(R.id.nameNextButton)?.setOnClickListener {
-            viewModel.petAdoptionDate = selectedDate
-            viewModel.petWeight = weight.text.toString().toInt()
-            viewModel.petColor = colorAutoComplete.text.toString()
-            findNavController().navigate(R.id.action_registerDetailsFragment_to_registerPhotoFragment)
+            registrationViewModel.setPetAdoptionDate(adoptionDateInput.text.toString())
+            registrationViewModel.setPetColor(colorAutoComplete.text.toString())
+            registrationViewModel.setPetWeight(weight.text.toString().toInt())
+            val action = RegisterDetailsFragmentDirections
+                .actionRegisterDetailsFragmentToRegisterPhotoFragment(
+                    args.phoneNumber, args.userName, args.petType, args.petName, args.petBreed, args.petGender, args.petBirthDate, weight.text.toString().toInt(), colorAutoComplete.text.toString(), selectedDate.toString()
+                )
+            findNavController().navigate(action)
         }
 
         var isColorSelected = false
