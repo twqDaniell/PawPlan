@@ -101,10 +101,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun dpToPx(dp: Int): Int {
-        return (dp * resources.displayMetrics.density).toInt()
-    }
-
     // Fetch User & Pet Data from Firestore and Navigate with SafeArgs
     private fun fetchUserData(userId: String, loadingScreen: View, bottomNav: BottomNavigationView) {
         val db = FirebaseFirestore.getInstance()
@@ -168,10 +164,10 @@ class MainActivity : AppCompatActivity() {
                 // Ensure we navigate only if we're NOT already there
                 if (navController.currentDestination?.id != R.id.profileFragment) {
                     val fragmentSection = findViewById<FragmentContainerView>(R.id.nav_host_fragment)
+                    navController.navigate(action)
+                    showBars()
                     loadingScreen.visibility = View.GONE
                     fragmentSection.visibility = View.VISIBLE
-                    showBars()
-                    navController.navigate(action)
                 }
             }.addOnFailureListener {
                 navigateToSignIn()

@@ -30,8 +30,11 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
 import com.example.pawplan.AppDatabase
+import com.example.pawplan.formatDateString
 import com.example.pawplan.models.Pet
 import com.example.pawplan.models.Memory
+import com.example.pawplan.showDatePickerDialog
+import com.example.pawplan.uploadImageToFirebase
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 
@@ -104,8 +107,8 @@ class ProfileFragment : Fragment() {
         view.findViewById<TextView>(R.id.petBreedTextView).text = "Breed: $petBreed"
         view.findViewById<TextView>(R.id.petWeightTextView).text = "Weight: $petWeight kg"
         view.findViewById<TextView>(R.id.petColorTextView).text = "Color: $petColor"
-        view.findViewById<TextView>(R.id.petBirthDateTextView).text = "Birth Date: ${formatDate(petBirthDate)}"
-        view.findViewById<TextView>(R.id.petAdoptionDateTextView).text = "Adoption Date: ${formatDate(petAdoptionDate)}"
+        view.findViewById<TextView>(R.id.petBirthDateTextView).text = "Birth Date: ${formatDateString(petBirthDate)}"
+        view.findViewById<TextView>(R.id.petAdoptionDateTextView).text = "Adoption Date: ${formatDateString(petAdoptionDate)}"
         petImageView = view.findViewById(R.id.petImageView)
         Picasso.get().load(petPicture).placeholder(R.drawable.placeholder).error(R.drawable.placeholder).into(petImageView)
         memoriesRecyclerView = view.findViewById(R.id.memories_recycler)
@@ -172,22 +175,17 @@ class ProfileFragment : Fragment() {
 
     private fun uploadMemoryImage(imageUri: Uri) {
         uploadProgressBar.visibility = View.VISIBLE
-        val storageRef = FirebaseStorage.getInstance().reference
-        val fileName = "memories/${UUID.randomUUID()}.jpg"
-        val fileRef = storageRef.child(fileName)
-        fileRef.putFile(imageUri)
-            .addOnSuccessListener {
-                fileRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                    saveMemory(downloadUrl.toString())
-                }.addOnFailureListener {
-                    uploadProgressBar.visibility = View.GONE
-                    Toast.makeText(requireContext(), "Failed to upload memory", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .addOnFailureListener {
-                uploadProgressBar.visibility = View.GONE
+
+        uploadImageToFirebase(
+            imageUri = imageUri,
+            folder = "memories",
+            onSuccess = { downloadUrl ->
+                saveMemory(downloadUrl)
+            },
+            onFailure = { exception ->
                 Toast.makeText(requireContext(), "Memory upload failed", Toast.LENGTH_SHORT).show()
             }
+        )
     }
 
     private fun saveMemory(imageUrl: String) {
@@ -209,17 +207,6 @@ class ProfileFragment : Fragment() {
             }
     }
 
-    private fun formatDate(dateString: String): String {
-        return try {
-            val inputFormat = SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH)
-            val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val date: Date = inputFormat.parse(dateString) ?: return dateString
-            outputFormat.format(date)
-        } catch (e: Exception) {
-            dateString
-        }
-    }
-
     private fun showEditProfileDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_profile, null)
         val colorDropdown = dialogView.findViewById<com.google.android.material.textfield.MaterialAutoCompleteTextView>(R.id.editPetColor)
@@ -239,16 +226,16 @@ class ProfileFragment : Fragment() {
         val adoptionDateInput = dialogView.findViewById<TextInputEditText>(R.id.editPetAdoptionDate)
         petNameInput.setText(petName)
         petWeightInput.setText(petWeight.toString())
-        birthDateInput.setText(formatDate(petBirthDate))
-        adoptionDateInput.setText(formatDate(petAdoptionDate))
+        birthDateInput.setText(formatDateString(petBirthDate))
+        adoptionDateInput.setText(formatDateString(petAdoptionDate))
         val colors = arrayOf("Brown", "Black", "White", "Orange", "Gray", "Multicolor")
         val colorAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, colors)
         colorDropdown.setAdapter(colorAdapter)
         colorDropdown.setText(petColor, false)
-        birthDateInput.setOnClickListener { showDatePicker(birthDateInput) }
-        adoptionDateInput.setOnClickListener { showDatePicker(adoptionDateInput) }
+        birthDateInput.setOnClickListener { showDatePickerDialog(requireContext(), birthDateInput) }
+        adoptionDateInput.setOnClickListener { showDatePickerDialog(requireContext(), adoptionDateInput) }
         loadBreedsForType(petType, breedDropdown)
-        val originalValues = listOf(petName, petWeight.toString(), petBreed, formatDate(petBirthDate), formatDate(petAdoptionDate), petColor)
+        val originalValues = listOf(petName, petWeight.toString(), petBreed, formatDateString(petBirthDate), formatDateString(petAdoptionDate), petColor)
         val inputFields = listOf(petNameInput, petWeightInput, birthDateInput, adoptionDateInput, breedDropdown)
         fun hasChangesAndValidInput(): Boolean {
             val allFilled = inputFields.all { it.text.toString().isNotBlank() }
@@ -317,18 +304,6 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun showDatePicker(editText: EditText) {
-        val calendar = Calendar.getInstance()
-        val year = calendar.get(Calendar.YEAR)
-        val month = calendar.get(Calendar.MONTH)
-        val day = calendar.get(Calendar.DAY_OF_MONTH)
-        val datePicker = DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
-            val formattedDate = String.format("%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear)
-            editText.setText(formattedDate)
-        }, year, month, day)
-        datePicker.show()
-    }
-
     private fun saveProfileChanges(dialogView: View, updatedPetColor: String) {
         val updatedPetName = dialogView.findViewById<EditText>(R.id.editPetName).text.toString()
         val updatedPetBreed = dialogView.findViewById<EditText>(R.id.editPetBreed).text.toString()
@@ -373,22 +348,17 @@ class ProfileFragment : Fragment() {
 
     private fun uploadProfilePicture(imageUri: Uri) {
         profilePictureProgressBar.visibility = View.VISIBLE
-        val storageRef = FirebaseStorage.getInstance().reference
-        val fileName = "pet_pictures/${UUID.randomUUID()}.jpg"
-        val fileRef = storageRef.child(fileName)
-        fileRef.putFile(imageUri)
-            .addOnSuccessListener {
-                fileRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                    updateProfilePicture(downloadUrl.toString())
-                }.addOnFailureListener { e ->
-                    profilePictureProgressBar.visibility = View.GONE
-                    Toast.makeText(requireContext(), "Failed to upload image", Toast.LENGTH_SHORT).show()
-                }
+
+        uploadImageToFirebase(
+            imageUri = imageUri,
+            folder = "profile_images",
+            onSuccess = { downloadUrl ->
+                updateProfilePicture(downloadUrl)
+            },
+            onFailure = { exception ->
+                Toast.makeText(requireContext(), "Failed to upload image", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener {
-                profilePictureProgressBar.visibility = View.GONE
-                Toast.makeText(requireContext(), "Image upload failed", Toast.LENGTH_SHORT).show()
-            }
+        )
     }
 
     private fun updateProfilePicture(imageUrl: String) {

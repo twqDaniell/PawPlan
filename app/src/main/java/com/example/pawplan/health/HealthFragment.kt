@@ -18,6 +18,8 @@ import com.example.pawplan.adapters.VetVisitAdapter
 import com.example.pawplan.models.Vet
 import com.example.pawplan.models.VetVisit
 import com.example.pawplan.AppDatabase
+import com.example.pawplan.formatDateString
+import com.example.pawplan.showDatePickerDialog
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
@@ -167,8 +169,8 @@ class HealthFragment : Fragment(), VetVisitAdapter.VetVisitActionListener {
         visitList.clear()
         visitList.addAll(futureVisits + pastVisits)
         visitAdapter.notifyDataSetChanged()
-        lastVisitText.text = if (pastVisits.isNotEmpty()) formatDate(pastVisits.first().visitDate.toString()) else "-"
-        nextVisitText.text = if (futureVisits.isNotEmpty()) formatDate(futureVisits.first().visitDate.toString()) else "-"
+        lastVisitText.text = if (pastVisits.isNotEmpty()) formatDateString(pastVisits.first().visitDate.toString()) else "-"
+        nextVisitText.text = if (futureVisits.isNotEmpty()) formatDateString(futureVisits.first().visitDate.toString()) else "-"
     }
 
     private fun showAddVisitDialog() {
@@ -192,7 +194,7 @@ class HealthFragment : Fragment(), VetVisitAdapter.VetVisitActionListener {
         }
         topicInput.addTextChangedListener(textWatcher)
         dateInput.addTextChangedListener(textWatcher)
-        dateInput.setOnClickListener { showDatePicker(dateInput) }
+        dateInput.setOnClickListener { showDatePickerDialog(requireContext(), dateInput) }
         saveButton.setOnClickListener {
             addVetVisit(topicInput.text.toString().trim(), dateInput.text.toString().trim())
             dialog.dismiss()
@@ -316,36 +318,12 @@ class HealthFragment : Fragment(), VetVisitAdapter.VetVisitActionListener {
             }
     }
 
-    private fun showAddVetDialog() {
-        showVetDialog(null)
-    }
-
-    private fun showDatePicker(editText: EditText) {
-        val calendar = Calendar.getInstance()
-        val datePicker = DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
-            val formattedDate = String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year)
-            editText.setText(formattedDate)
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
-        datePicker.show()
-    }
-
     private fun updateNextAndLastVisit() {
         val today = Date()
         val pastVisits = visitList.filter { it.visitDate.before(today) }.sortedByDescending { it.visitDate }
         val futureVisits = visitList.filter { it.visitDate.after(today) }.sortedBy { it.visitDate }
-        lastVisitText.text = if (pastVisits.isNotEmpty()) formatDate(pastVisits.first().visitDate.toString()) else "-"
-        nextVisitText.text = if (futureVisits.isNotEmpty()) formatDate(futureVisits.first().visitDate.toString()) else "-"
-    }
-
-    private fun formatDate(dateString: String): String {
-        return try {
-            val inputFormat = SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH)
-            val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            val date: Date = inputFormat.parse(dateString) ?: return dateString
-            outputFormat.format(date)
-        } catch (e: Exception) {
-            dateString
-        }
+        lastVisitText.text = if (pastVisits.isNotEmpty()) formatDateString(pastVisits.first().visitDate.toString()) else "-"
+        nextVisitText.text = if (futureVisits.isNotEmpty()) formatDateString(futureVisits.first().visitDate.toString()) else "-"
     }
 
     override fun onDeleteVetVisit(visit: VetVisit) {

@@ -12,11 +12,13 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.pawplan.R
 import com.example.pawplan.externalAPI.RetrofitClient
 import com.example.pawplan.models.BreedsResponse
 import com.example.pawplan.models.CatBreed
+import com.example.pawplan.models.RegistrationViewModel
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
@@ -30,6 +32,8 @@ import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+private lateinit var registrationViewModel: RegistrationViewModel
+
 class RegisterPetBreedFragment : Fragment() {
     private var selectedDate: Date? = null
 
@@ -37,13 +41,21 @@ class RegisterPetBreedFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+        registrationViewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
         val view = inflater.inflate(R.layout.fragment_register_pet_breed, container, false)
         val breedAutoComplete = view.findViewById<MaterialAutoCompleteTextView>(R.id.breedAutocomplete)
         val birthDateInput = view.findViewById<TextInputEditText>(R.id.birthDateInputEdit)
         val nextButton = view.findViewById<Button>(R.id.nameNextButton)
         val title = view.findViewById<TextView>(R.id.textViewBreed1)
         val textInputLayout = view.findViewById<TextInputLayout>(R.id.textInputLayoutBreed)
+
+        registrationViewModel.petBreed.observe(viewLifecycleOwner) { breed ->
+            breedAutoComplete.setText(breed)
+        }
+
+        registrationViewModel.petBirthDate.observe(viewLifecycleOwner) { birthDate ->
+            birthDateInput.setText(birthDate)
+        }
 
         val args = RegisterPetBreedFragmentArgs.fromBundle(requireArguments())
 
@@ -85,6 +97,8 @@ class RegisterPetBreedFragment : Fragment() {
         }
 
         nextButton.setOnClickListener {
+            registrationViewModel.setPetBreed(breedAutoComplete.text.toString())
+            registrationViewModel.setPetBirthDate(birthDateInput.text.toString())
             val action = RegisterPetBreedFragmentDirections
                 .actionRegisterPetBreedFragmentToRegisterPetDetailsFragment(
                     args.phoneNumber, args.userName, args.petType, args.petName, breedAutoComplete.text.toString(), args.petGender, selectedDate.toString()
@@ -125,28 +139,23 @@ class RegisterPetBreedFragment : Fragment() {
     }
 
     private fun showDatePicker(onDateSelected: (Date) -> Unit) {
-        // Get today's date in milliseconds
         val today = MaterialDatePicker.todayInUtcMilliseconds()
 
-        // Create CalendarConstraints to restrict future dates
         val constraints = CalendarConstraints.Builder()
-            .setValidator(DateValidatorPointBackward.before(today)) // Only allow dates up to today
+            .setValidator(DateValidatorPointBackward.before(today))
             .build()
 
-        // Build the MaterialDatePicker with constraints
         val datePicker = MaterialDatePicker.Builder.datePicker()
             .setTitleText("Select a Date")
-            .setSelection(today) // Default selection to today's date
-            .setCalendarConstraints(constraints) // Apply the constraints
+            .setSelection(today)
+            .setCalendarConstraints(constraints)
             .build()
 
-        // Show the DatePicker
         datePicker.show(parentFragmentManager, "DATE_PICKER")
 
-        // Handle the date selection
         datePicker.addOnPositiveButtonClickListener { selection ->
-            val date = Date(selection) // Convert the selection to a Date object
-            onDateSelected(date) // Pass the selected Date to the callback
+            val date = Date(selection)
+            onDateSelected(date)
         }
     }
 

@@ -12,8 +12,7 @@ import com.example.pawplan.R
 import com.example.pawplan.models.MissingPet
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import java.text.SimpleDateFormat
-import java.util.*
+import com.example.pawplan.formatDate
 
 class MissingPetAdapter(
     private var allMissingPets: MutableList<MissingPet>,
@@ -91,10 +90,5 @@ class MissingPetAdapter(
             editButton.setOnClickListener { onEditClick(missingPet) }
             deleteButton.setOnClickListener { onDeleteClick(missingPet) }
         }
-    }
-
-    private fun formatDate(date: Date): String {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        return sdf.format(date)
     }
 }

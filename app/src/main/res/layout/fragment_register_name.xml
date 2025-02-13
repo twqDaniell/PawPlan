@@ -96,7 +96,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 android:layout_marginTop="160dp"
-                android:backgroundTint="#E4AEC6"
+                android:backgroundTint="@color/button_background"
                 android:textSize="17dp"
                 android:enabled="false"
                 android:text="Next" />

@@ -12,15 +12,17 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.pawplan.MainActivity
 import com.example.pawplan.R
 import com.example.pawplan.AppDatabase
 import com.example.pawplan.models.User
 import com.example.pawplan.models.Pet
+import com.example.pawplan.models.RegistrationViewModel
+import com.example.pawplan.uploadImageToFirebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 
 class RegisterPhotoFragment : Fragment() {
     private var selectedImageUri: Uri? = null
@@ -72,26 +74,18 @@ class RegisterPhotoFragment : Fragment() {
     }
 
     private fun uploadImageAndSaveData(imageUri: Uri) {
-        val storageRef = FirebaseStorage.getInstance().reference
-        val fileName = "photos/${System.currentTimeMillis()}_${imageUri.lastPathSegment}"
-        val fileRef = storageRef.child(fileName)
-
-        fileRef.putFile(imageUri)
-            .addOnSuccessListener {
-                fileRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                    val photoUrl = downloadUrl.toString()
-                    saveDataToFirestore(photoUrl)
-                }.addOnFailureListener { e ->
-                    Log.e("FirebaseStorage", "Failed to get download URL: ${e.message}", e)
-                    Toast.makeText(requireContext(), "Failed to upload photo", Toast.LENGTH_SHORT).show()
-                    progressBar.visibility = View.GONE
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("FirebaseStorage", "Photo upload failed: ${e.message}", e)
+        uploadImageToFirebase(
+            imageUri = imageUri,
+            folder = "memories",
+            onSuccess = { downloadUrl ->
+                val photoUrl = downloadUrl
+                saveDataToFirestore(photoUrl)
+            },
+            onFailure = { exception ->
                 Toast.makeText(requireContext(), "Failed to upload photo", Toast.LENGTH_SHORT).show()
                 progressBar.visibility = View.GONE
             }
+        )
     }
 
     private fun saveDataToFirestore(photoUrl: String) {

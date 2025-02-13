@@ -10,22 +10,34 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ImageView
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.example.pawplan.R
+import com.example.pawplan.models.RegistrationViewModel
 import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
+
+private lateinit var registrationViewModel: RegistrationViewModel
 
 class RegisterPetNameFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+        registrationViewModel = ViewModelProvider(requireActivity()).get(RegistrationViewModel::class.java)
         val view = inflater.inflate(R.layout.fragment_register_pet_name, container, false)
         val petName = view.findViewById<TextInputEditText>(R.id.textInputEditTextPetName)
         val genderAutoComplete = view.findViewById<MaterialAutoCompleteTextView>(R.id.autoCompleteTextViewGender)
         val petTypeImage = view.findViewById<ImageView>(R.id.catDogImage)
         val nextButton = view.findViewById<Button>(R.id.nameNextButton)
+
+        registrationViewModel.petName.observe(viewLifecycleOwner) { name ->
+            petName.setText(name)
+        }
+
+        registrationViewModel.petGender.observe(viewLifecycleOwner) { gender ->
+            genderAutoComplete.setText(gender)
+        }
 
         val args = RegisterPetNameFragmentArgs.fromBundle(requireArguments())
 
@@ -48,6 +60,8 @@ class RegisterPetNameFragment : Fragment() {
         }
 
         nextButton.setOnClickListener {
+            registrationViewModel.setPetName(petName.text.toString())
+            registrationViewModel.setPetGender(genderAutoComplete.text.toString())
             val action = RegisterPetNameFragmentDirections
                 .actionRegisterPetNameFragmentToRegisterPetBreedFragment(
                     args.phoneNumber, args.userName, args.petType, petName.text.toString(), genderAutoComplete.text.toString()

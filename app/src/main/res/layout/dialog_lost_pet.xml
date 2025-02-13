@@ -9,25 +9,17 @@
 
     <ImageView
         android:id="@+id/missingPetImage"
-        android:layout_width="match_parent"
-        android:layout_height="250dp"
+        android:layout_gravity="center"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
         android:scaleType="centerInside"
         android:src="@drawable/ic_add_photo"
         android:background="@android:color/darker_gray"
         android:contentDescription="Missing Pet Image"/>
 
-    <Button
-        android:id="@+id/selectImageButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Select Image"
-        style="@style/Widget.Material3.Button.IconButton.Filled"
-        android:backgroundTint="@color/white"
-        android:textColor="@color/primaryColor"
-        android:layout_marginTop="10dp"/>
-
     <com.google.android.material.textfield.TextInputLayout
-        android:layout_width="match_parent"
+        android:layout_width="300dp"
+        android:layout_gravity="center"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
         style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
@@ -50,7 +42,7 @@
 
     <ProgressBar
         android:id="@+id/uploadProgressBar"
-        android:layout_width="match_parent"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:visibility="gone"
         style="@android:style/Widget.Material.ProgressBar.Horizontal"

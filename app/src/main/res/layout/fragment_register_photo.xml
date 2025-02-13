@@ -118,7 +118,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 android:layout_marginTop="240dp"
-                android:backgroundTint="#E4AEC6"
+                android:backgroundTint="@color/button_background"
                 android:fontFamily="@font/latobold"
                 android:textSize="17dp"
                 android:text="Done" />

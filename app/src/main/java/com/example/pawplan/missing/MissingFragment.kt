@@ -280,7 +280,6 @@ class MissingFragment : Fragment() {
     private fun showLostPetDialog(missingPet: MissingPet? = null) {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_lost_pet, null)
         imageViewInDialog = dialogView.findViewById(R.id.missingPetImage)
-        val selectImageButton = dialogView.findViewById<Button>(R.id.selectImageButton)
         val descriptionInput = dialogView.findViewById<EditText>(R.id.editMissingDescription)
         val progressBar = dialogView.findViewById<ProgressBar>(R.id.uploadProgressBar)
 
@@ -294,13 +293,15 @@ class MissingFragment : Fragment() {
         // ✅ Load existing data if editing
         if (isEditing) {
             descriptionInput.setText(originalDescription)
+            imageViewInDialog?.scaleType = ImageView.ScaleType.CENTER_CROP
+
             imageViewInDialog?.load(originalImage) {
                 crossfade(true)
                 placeholder(R.drawable.placeholder)
                 error(R.drawable.placeholder)
             }
         } else {
-            imageViewInDialog?.setImageResource(R.drawable.placeholder) // Default placeholder
+            imageViewInDialog?.setImageResource(R.drawable.ic_add_photo) // Default placeholder
         }
 
         val dialog = AlertDialog.Builder(requireContext())
@@ -334,13 +335,6 @@ class MissingFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
-        // ✅ Handle Image Selection Click
-        selectImageButton.setOnClickListener {
-            val intent = Intent(Intent.ACTION_PICK)
-            intent.type = "image/*"
-            startActivityForResult(intent, PICK_IMAGE_REQUEST)
-        }
-
         // ✅ Clicking Image Also Allows Selection
         imageViewInDialog?.setOnClickListener {
             val intent = Intent(Intent.ACTION_PICK)
@@ -368,6 +362,8 @@ class MissingFragment : Fragment() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
             selectedImageUri = data.data
+
+            imageViewInDialog?.scaleType = ImageView.ScaleType.CENTER_CROP
 
             imageViewInDialog?.load(selectedImageUri) {
                 crossfade(true)

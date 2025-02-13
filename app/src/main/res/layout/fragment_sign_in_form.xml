@@ -112,7 +112,7 @@
             app:layout_constraintTop_toTopOf="parent"
             android:fontFamily="@font/latobold"
             android:layout_marginTop="160dp"
-            android:backgroundTint="#E4AEC6"
+            android:backgroundTint="@color/button_background"
             android:enabled="false"
             android:text="Send Code" />
 

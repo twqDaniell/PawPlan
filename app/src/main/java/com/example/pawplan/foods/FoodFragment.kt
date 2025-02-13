@@ -25,9 +25,9 @@ import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
 import java.util.*
 import com.example.pawplan.AppDatabase
+import com.example.pawplan.uploadImageToFirebase
 
 class FoodFragment : Fragment(), OnAllergyDeletedListener {
-
     private lateinit var foodImage: ImageView
     private lateinit var addAllergyButton: ImageButton
     private lateinit var allergiesRecycler: RecyclerView
@@ -36,7 +36,6 @@ class FoodFragment : Fragment(), OnAllergyDeletedListener {
     private lateinit var allergiesAdapter: AllergiesAdapter
     private val allergiesList = mutableListOf<Allergy>()
 
-    private val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
     private lateinit var petId: String
     private var selectedImageUri: Uri? = null
 
@@ -183,19 +182,19 @@ class FoodFragment : Fragment(), OnAllergyDeletedListener {
     }
 
     private fun uploadFoodImage() {
-        val storageRef = FirebaseStorage.getInstance().reference.child("food_images/${UUID.randomUUID()}.jpg")
         val progressBar = view?.findViewById<ProgressBar>(R.id.foodImageProgressBar)
         progressBar?.visibility = View.VISIBLE
-        storageRef.putFile(selectedImageUri!!)
-            .addOnSuccessListener {
-                storageRef.downloadUrl.addOnSuccessListener { imageUrl ->
-                    saveFoodImageUrl(imageUrl.toString(), progressBar)
-                }
-            }
-            .addOnFailureListener {
-                progressBar?.visibility = View.GONE
+
+        uploadImageToFirebase(
+            imageUri = selectedImageUri!!,
+            folder = "food_images",
+            onSuccess = { downloadUrl ->
+                saveFoodImageUrl(downloadUrl, progressBar)
+            },
+            onFailure = { exception ->
                 Toast.makeText(requireContext(), "Failed to upload image", Toast.LENGTH_SHORT).show()
             }
+        )
     }
 
     private fun saveFoodImageUrl(imageUrl: String, progressBar: ProgressBar?) {
