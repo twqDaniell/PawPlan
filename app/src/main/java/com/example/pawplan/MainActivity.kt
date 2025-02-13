@@ -8,6 +8,7 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.google.android.material.appbar.MaterialToolbar
 import androidx.fragment.app.FragmentContainerView
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
@@ -19,8 +20,6 @@ import com.example.pawplan.profile.ProfileFragmentDirections
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-// Import your Room database
-import com.example.pawplan.AppDatabase
 
 class MainActivity : AppCompatActivity() {
     lateinit var petNameGlobal: String
@@ -44,7 +43,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-        val toolbar = findViewById<Toolbar>(R.id.top_bar)
+        val toolbar = findViewById<MaterialToolbar>(R.id.top_bar)
         setSupportActionBar(toolbar)
 
         // Setup Navigation Controller properly
@@ -77,10 +76,7 @@ class MainActivity : AppCompatActivity() {
             fetchUserData(userId, loadingScreen, bottomNav)
         }
 
-        // Logout Button Functionality
-        findViewById<ImageButton>(R.id.logout_button)?.setOnClickListener {
-            handleLogout()
-        }
+        findViewById<ImageButton>(R.id.logout_button).setOnClickListener { handleLogout() }
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
@@ -103,6 +99,10 @@ class MainActivity : AppCompatActivity() {
                 else -> false
             }
         }
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
     }
 
     // Fetch User & Pet Data from Firestore and Navigate with SafeArgs
@@ -242,7 +242,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showBars() {
-        val toolbar = findViewById<Toolbar>(R.id.top_bar)
+        val toolbar = findViewById<MaterialToolbar>(R.id.top_bar)
         Log.d("MainActivity", "Toolbar: $toolbar")
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         toolbar.visibility = View.VISIBLE
@@ -250,7 +250,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun hideBars() {
-        val toolbar = findViewById<Toolbar>(R.id.top_bar)
+        val toolbar = findViewById<MaterialToolbar>(R.id.top_bar)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
         toolbar.visibility = View.GONE
         bottomNav.visibility = View.GONE

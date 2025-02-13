@@ -21,6 +21,7 @@ import com.example.pawplan.AppDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
+import com.google.android.material.textfield.TextInputEditText
 
 class HealthFragment : Fragment(), VetVisitAdapter.VetVisitActionListener {
 
@@ -172,8 +173,8 @@ class HealthFragment : Fragment(), VetVisitAdapter.VetVisitActionListener {
 
     private fun showAddVisitDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_visit, null)
-        val topicInput = dialogView.findViewById<EditText>(R.id.editVisitTopic)
-        val dateInput = dialogView.findViewById<EditText>(R.id.editVisitDate)
+        val topicInput = dialogView.findViewById<TextInputEditText>(R.id.editVisitTopic)
+        val dateInput = dialogView.findViewById<TextInputEditText>(R.id.editVisitDate)
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
             .setTitle("Add Vet Visit")
@@ -220,8 +221,8 @@ class HealthFragment : Fragment(), VetVisitAdapter.VetVisitActionListener {
 
     private fun showVetDialog(existingVet: Vet?) {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_vet, null)
-        val vetNameInput = dialogView.findViewById<EditText>(R.id.editVetName)
-        val vetPhoneInput = dialogView.findViewById<EditText>(R.id.editVetPhone)
+        val vetNameInput = dialogView.findViewById<TextInputEditText>(R.id.editVetName)
+        val vetPhoneInput = dialogView.findViewById<TextInputEditText>(R.id.editVetPhone)
         val title = if (existingVet == null) "Add Vet" else "Edit Vet"
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)

@@ -1,4 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="16dp">
@@ -8,158 +10,79 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Pet Name (Row Layout) -->
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="10dp"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Pet Name:"
-                android:textStyle="bold"/>
-
-            <EditText
+            android:hint="Pet Name">
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editPetName"
-                android:layout_width="0dp"
-                android:layout_weight="2"
-                android:layout_height="wrap_content"
-                android:hint="Enter pet name"/>
-        </LinearLayout>
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Pet Breed (Dropdown) -->
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="10dp"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Breed:"
-                android:textStyle="bold"/>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="0dp"
-                android:layout_weight="2"
-                android:layout_height="wrap_content"
-                style="@style/Widget.AppCompat.Spinner.Underlined"
-                android:hint="Select breed">
-
-                <AutoCompleteTextView
-                    android:id="@+id/editPetBreed"
-                    android:layout_width="250dp"
-                    android:layout_weight="2"
-                    android:layout_height="wrap_content"
-                    android:hint="Select breed"
-                    android:background="@android:color/transparent"
-                    android:textSize="16sp"
-                    android:padding="8dp"/>
-            </com.google.android.material.textfield.TextInputLayout>
-        </LinearLayout>
-
-        <!-- Pet Weight -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="10dp"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Weight (kg):"
-                android:textStyle="bold"/>
-
-            <EditText
+            android:hint="Weight (kg)"
+            android:layout_marginTop="8dp">
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editPetWeight"
-                android:layout_width="0dp"
-                android:layout_weight="2"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="number"
-                android:hint="Enter weight"/>
-        </LinearLayout>
+                android:inputType="number" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Pet Color (Dropdown) -->
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="10dp"
-            android:gravity="center_vertical">
+            android:hint="Breed"
+            android:layout_marginTop="8dp">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Color:"
-                android:textStyle="bold"/>
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/editPetBreed"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-            <Spinner
-                android:id="@+id/editPetColor"
-                android:layout_width="0dp"
-                android:layout_weight="2"
-                style="@style/Widget.AppCompat.Spinner.Underlined"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
 
-        <!-- Pet Birth Date (Date Picker) -->
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginBottom="10dp"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Birth Date:"
-                android:textStyle="bold"/>
-
-            <EditText
+            android:hint="Birth Date"
+            android:layout_marginTop="8dp">
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editPetBirthDate"
-                android:layout_width="0dp"
-                android:layout_weight="2"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:focusable="false"
-                android:clickable="true"
-                android:hint="Select birth date"/>
-        </LinearLayout>
+                android:clickable="true" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Pet Adoption Date (Date Picker) -->
-        <LinearLayout
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="Adoption Date:"
-                android:textStyle="bold"/>
-
-            <EditText
+            android:hint="Adoption Date"
+            android:layout_marginTop="8dp">
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/editPetAdoptionDate"
-                android:layout_width="0dp"
-                android:layout_weight="2"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:focusable="false"
-                android:clickable="true"
-                android:hint="Select adoption date"/>
-        </LinearLayout>
+                android:clickable="true" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Color"
+            android:layout_marginTop="8dp">
+            <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                android:id="@+id/editPetColor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>
 </ScrollView>

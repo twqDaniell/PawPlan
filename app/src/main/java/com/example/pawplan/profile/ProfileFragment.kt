@@ -32,6 +32,8 @@ import java.util.*
 import com.example.pawplan.AppDatabase
 import com.example.pawplan.models.Pet
 import com.example.pawplan.models.Memory
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 
 class ProfileFragment : Fragment() {
     private lateinit var userName: String
@@ -220,7 +222,7 @@ class ProfileFragment : Fragment() {
 
     private fun showEditProfileDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_profile, null)
-        val colorSpinner = dialogView.findViewById<Spinner>(R.id.editPetColor)
+        val colorDropdown = dialogView.findViewById<com.google.android.material.textfield.MaterialAutoCompleteTextView>(R.id.editPetColor)
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
             .setTitle("Edit Profile")
@@ -230,19 +232,19 @@ class ProfileFragment : Fragment() {
         dialog.show()
         val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
         saveButton.isEnabled = false
-        val petNameInput = dialogView.findViewById<EditText>(R.id.editPetName)
-        val petWeightInput = dialogView.findViewById<EditText>(R.id.editPetWeight)
-        val breedDropdown = dialogView.findViewById<AutoCompleteTextView>(R.id.editPetBreed)
-        val birthDateInput = dialogView.findViewById<EditText>(R.id.editPetBirthDate)
-        val adoptionDateInput = dialogView.findViewById<EditText>(R.id.editPetAdoptionDate)
+        val petNameInput = dialogView.findViewById<TextInputEditText>(R.id.editPetName)
+        val petWeightInput = dialogView.findViewById<TextInputEditText>(R.id.editPetWeight)
+        val breedDropdown = dialogView.findViewById<com.google.android.material.textfield.MaterialAutoCompleteTextView>(R.id.editPetBreed)
+        val birthDateInput = dialogView.findViewById<TextInputEditText>(R.id.editPetBirthDate)
+        val adoptionDateInput = dialogView.findViewById<TextInputEditText>(R.id.editPetAdoptionDate)
         petNameInput.setText(petName)
         petWeightInput.setText(petWeight.toString())
         birthDateInput.setText(formatDate(petBirthDate))
         adoptionDateInput.setText(formatDate(petAdoptionDate))
         val colors = arrayOf("Brown", "Black", "White", "Orange", "Gray", "Multicolor")
-        val colorAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, colors)
-        colorSpinner.adapter = colorAdapter
-        colorSpinner.setSelection(colors.indexOf(petColor))
+        val colorAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, colors)
+        colorDropdown.setAdapter(colorAdapter)
+        colorDropdown.setText(petColor, false)
         birthDateInput.setOnClickListener { showDatePicker(birthDateInput) }
         adoptionDateInput.setOnClickListener { showDatePicker(adoptionDateInput) }
         loadBreedsForType(petType, breedDropdown)
@@ -250,7 +252,12 @@ class ProfileFragment : Fragment() {
         val inputFields = listOf(petNameInput, petWeightInput, birthDateInput, adoptionDateInput, breedDropdown)
         fun hasChangesAndValidInput(): Boolean {
             val allFilled = inputFields.all { it.text.toString().isNotBlank() }
-            return allFilled && (petNameInput.text.toString() != originalValues[0] || petWeightInput.text.toString() != originalValues[1] || breedDropdown.text.toString() != originalValues[2] || birthDateInput.text.toString() != originalValues[3] || adoptionDateInput.text.toString() != originalValues[4] || colorSpinner.selectedItem.toString() != originalValues[5])
+            return allFilled && (petNameInput.text.toString() != originalValues[0] ||
+                    petWeightInput.text.toString() != originalValues[1] ||
+                    breedDropdown.text.toString() != originalValues[2] ||
+                    birthDateInput.text.toString() != originalValues[3] ||
+                    adoptionDateInput.text.toString() != originalValues[4] ||
+                    colorDropdown.text.toString() != originalValues[5])
         }
         val textWatcher = object : TextWatcher {
             override fun afterTextChanged(s: Editable?) { saveButton.isEnabled = hasChangesAndValidInput() }
@@ -258,18 +265,15 @@ class ProfileFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         }
         inputFields.forEach { it.addTextChangedListener(textWatcher) }
-        colorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) { saveButton.isEnabled = hasChangesAndValidInput() }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
-        }
+        colorDropdown.setOnItemClickListener { _, _, _, _ -> saveButton.isEnabled = hasChangesAndValidInput() }
         breedDropdown.setOnItemClickListener { _, _, _, _ -> saveButton.isEnabled = hasChangesAndValidInput() }
-        saveButton.isEnabled = false
         saveButton.setOnClickListener {
-            val updatedPetColor = colorSpinner.selectedItem.toString()
+            val updatedPetColor = colorDropdown.text.toString()
             saveProfileChanges(dialogView, updatedPetColor)
             dialog.dismiss()
         }
     }
+
 
     private fun loadBreedsForType(petType: String, dropdown: AutoCompleteTextView) {
         if (petType.lowercase() == "dog") {
