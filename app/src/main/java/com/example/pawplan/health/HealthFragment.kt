@@ -3,6 +3,8 @@ package com.example.pawplan.health
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -13,13 +15,14 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.pawplan.MainActivity
 import com.example.pawplan.R
 import com.example.pawplan.adapters.VetVisitAdapter
+import com.example.pawplan.models.Vet
 import com.example.pawplan.models.VetVisit
+import com.example.pawplan.AppDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
-import com.google.firebase.firestore.Query
 import java.util.*
 
-class HealthFragment : Fragment() {
+class HealthFragment : Fragment(), VetVisitAdapter.VetVisitActionListener {
 
     private lateinit var vetNameText: TextView
     private lateinit var vetPhoneText: TextView
@@ -31,6 +34,7 @@ class HealthFragment : Fragment() {
     private lateinit var addVetSection: View
     private lateinit var vetDets: LinearLayout
     private lateinit var vetSection: View
+    private lateinit var editVetButton: ImageButton
 
     private var vetId: String? = null
     private var petId: String? = null
@@ -38,10 +42,9 @@ class HealthFragment : Fragment() {
     private val visitList = mutableListOf<VetVisit>()
     private lateinit var visitAdapter: VetVisitAdapter
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    private lateinit var appDatabase: AppDatabase
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val view = inflater.inflate(R.layout.fragment_health, container, false)
 
         vetNameText = view.findViewById(R.id.vetName)
@@ -49,244 +52,243 @@ class HealthFragment : Fragment() {
         vetVisitsRecycler = view.findViewById(R.id.vetVisitsRecycler)
         addVetButton = view.findViewById(R.id.addVetButton)
         addVisitButton = view.findViewById(R.id.addVisitButton)
-
         lastVisitText = view.findViewById(R.id.lastVisitText)
         nextVisitText = view.findViewById(R.id.nextVisitText)
+        editVetButton = view.findViewById(R.id.editVetButton)
 
         petId = arguments?.getString("petId")
         vetId = arguments?.getString("vetId")
         petWeight = arguments?.getInt("petWeight")
-
         view.findViewById<TextView>(R.id.weightText).text = petWeight.toString()
 
         vetVisitsRecycler.layoutManager = LinearLayoutManager(requireContext())
-        visitAdapter = VetVisitAdapter(visitList)
+        visitAdapter = VetVisitAdapter(visitList, this)
         vetVisitsRecycler.adapter = visitAdapter
 
-        addVetSection = view.findViewById<View>(R.id.addVetSection)
-        vetDets = view.findViewById<LinearLayout>(R.id.vetDets)
-        vetSection = view.findViewById<View>(R.id.vetSection)
+        addVetSection = view.findViewById(R.id.addVetSection)
+        vetDets = view.findViewById(R.id.vetDets)
+        vetSection = view.findViewById(R.id.vetSection)
+
+        appDatabase = AppDatabase(requireContext())
 
         if (vetId.isNullOrEmpty()) {
             addVetSection.visibility = View.VISIBLE
             vetDets.visibility = View.GONE
         } else {
-            fetchVetData()
+            loadVetData()
             addVetSection.visibility = View.GONE
             vetSection.visibility = View.VISIBLE
             vetDets.visibility = View.VISIBLE
         }
 
-        fetchVetVisits()
+        loadVetVisits()
 
         addVisitButton.setOnClickListener { showAddVisitDialog() }
-
-        addVetButton.setOnClickListener {
-            showAddVetDialog()
+        addVetButton.setOnClickListener { showVetDialog(null) } // for adding a new vet
+        if (vetId != null && vetNameText != null && vetPhoneText != null) {
+            editVetButton.setOnClickListener {
+                showVetDialog(
+                    Vet(
+                        vetId.toString(),
+                        vetNameText.text.toString(),
+                        vetPhoneText.text.toString()
+                    )
+                )
+            }
         }
 
         return view
     }
 
-    private fun fetchVetData() {
-        FirebaseFirestore.getInstance().collection("vets")
-            .document(vetId!!)
+    private fun loadVetData() {
+        vetId?.let { id ->
+            val localVet = appDatabase.vetDao.getVet(id)
+            if (localVet != null) {
+                vetNameText.text = localVet.vetName
+                vetPhoneText.text = localVet.phoneNumber
+            } else {
+                fetchVetDataFromRemote(id)
+            }
+        }
+    }
+
+    private fun fetchVetDataFromRemote(id: String) {
+        FirebaseFirestore.getInstance().collection("vets").document(id)
             .get()
             .addOnSuccessListener { document ->
-                vetNameText.text = document.getString("vetName") ?: "Unknown"
-                vetPhoneText.text = document.getString("phoneNumber") ?: "Unknown"
+                val fetchedVetName = document.getString("vetName") ?: "Unknown"
+                val fetchedVetPhone = document.getString("phoneNumber") ?: "Unknown"
+                vetNameText.text = fetchedVetName
+                vetPhoneText.text = fetchedVetPhone
+                val vet = Vet(id, fetchedVetName, fetchedVetPhone)
+                appDatabase.vetDao.insertVet(vet)
             }
     }
 
-    private fun fetchVetVisits() {
+    private fun loadVetVisits() {
+        petId?.let { id ->
+            val localVisits = appDatabase.vetVisitDao.getVetVisitsByPetId(id)
+            if (localVisits.isNotEmpty()) {
+                visitList.clear()
+                visitList.addAll(localVisits)
+                sortAndDisplayVisits()
+            } else {
+                fetchVetVisitsFromRemote(id)
+            }
+        }
+    }
+
+    private fun fetchVetVisitsFromRemote(petId: String) {
         FirebaseFirestore.getInstance().collection("vetVisits")
             .whereEqualTo("petId", petId)
             .get()
             .addOnSuccessListener { documents ->
                 visitList.clear()
-                val pastVisits = mutableListOf<VetVisit>()
-                val futureVisits = mutableListOf<VetVisit>()
-
-                val today = Date()
-
+                val remoteVisits = mutableListOf<VetVisit>()
                 for (doc in documents) {
                     val visitDate = doc.getDate("visitDate")
                     if (visitDate != null) {
-                        val visit = VetVisit(
-                            doc.getString("topic") ?: "Unknown",
-                            visitDate
-                        )
-
-                        if (visitDate.before(today)) {
-                            pastVisits.add(visit) // Past visit
-                        } else {
-                            futureVisits.add(visit) // Future visit
-                        }
+                        val id = doc.id
+                        val visit = VetVisit(id, doc.getString("topic") ?: "Unknown", visitDate)
+                        remoteVisits.add(visit)
+                        appDatabase.vetVisitDao.insertVetVisit(visit, petId)
                     }
                 }
-
-                // Sort lists by date
-                pastVisits.sortByDescending { it.visitDate } // Descending
-                futureVisits.sortBy { it.visitDate } // Ascending
-
-                // Combine lists: past visits first, then future visits
-                visitList.addAll(futureVisits + pastVisits)
-                visitAdapter.notifyDataSetChanged()
-
-                // ✅ Set last visit (most recent past visit) and next visit (earliest future visit)
-                lastVisitText.text = if (pastVisits.isNotEmpty()) formatDate(pastVisits.first().visitDate.toString()) else "-"
-                nextVisitText.text = if (futureVisits.isNotEmpty()) formatDate(futureVisits.first().visitDate.toString()) else "-"
+                visitList.addAll(remoteVisits)
+                sortAndDisplayVisits()
             }
+    }
+
+    private fun sortAndDisplayVisits() {
+        val today = Date()
+        val pastVisits = visitList.filter { it.visitDate.before(today) }.sortedByDescending { it.visitDate }
+        val futureVisits = visitList.filter { it.visitDate.after(today) }.sortedBy { it.visitDate }
+        visitList.clear()
+        visitList.addAll(futureVisits + pastVisits)
+        visitAdapter.notifyDataSetChanged()
+        lastVisitText.text = if (pastVisits.isNotEmpty()) formatDate(pastVisits.first().visitDate.toString()) else "-"
+        nextVisitText.text = if (futureVisits.isNotEmpty()) formatDate(futureVisits.first().visitDate.toString()) else "-"
     }
 
     private fun showAddVisitDialog() {
         val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_visit, null)
         val topicInput = dialogView.findViewById<EditText>(R.id.editVisitTopic)
         val dateInput = dialogView.findViewById<EditText>(R.id.editVisitDate)
-
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
             .setTitle("Add Vet Visit")
-            .setPositiveButton("Save", null) // Set to null, we handle it manually
+            .setPositiveButton("Save", null)
             .setNegativeButton("Cancel", null)
             .create()
-
-        dialog.show() // Must call show() before accessing buttons
-
-        // ✅ Reference Save Button AFTER show()
+        dialog.show()
         val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-        saveButton.isEnabled = false // Start as disabled
-
-        // ✅ Function to Check for Filled Fields
-        fun shouldEnableSaveButton(): Boolean {
-            return topicInput.text.toString().isNotBlank() && dateInput.text.toString().isNotBlank()
-        }
-
-        // ✅ Listen for Text Changes
-        val textWatcher = object : android.text.TextWatcher {
-            override fun afterTextChanged(s: android.text.Editable?) {
-                saveButton.isEnabled = shouldEnableSaveButton()
-            }
+        saveButton.isEnabled = false
+        fun shouldEnableSaveButton() = topicInput.text.toString().isNotBlank() && dateInput.text.toString().isNotBlank()
+        val textWatcher = object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) { saveButton.isEnabled = shouldEnableSaveButton() }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         }
         topicInput.addTextChangedListener(textWatcher)
         dateInput.addTextChangedListener(textWatcher)
-
-        // ✅ Open DatePicker when clicking on date field
-        dateInput.setOnClickListener {
-            showDatePicker(dateInput)
-        }
-
-        // ✅ Handle Save Button Click
+        dateInput.setOnClickListener { showDatePicker(dateInput) }
         saveButton.setOnClickListener {
-            saveVetVisit(dialogView)
+            addVetVisit(topicInput.text.toString().trim(), dateInput.text.toString().trim())
             dialog.dismiss()
         }
     }
 
-
-    private fun showAddVetDialog() {
-        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_vet, null)
-        val dialog = AlertDialog.Builder(requireContext())
-            .setView(dialogView)
-            .setTitle("Add Vet")
-            .setPositiveButton("Save") { _, _ ->
-                saveVetToFirestore(dialogView)
-            }
-            .setNegativeButton("Cancel", null)
-            .create()
-
-        dialog.show()
-    }
-
-    private fun showDatePicker(editText: EditText) {
-        val calendar = Calendar.getInstance()
-        val datePicker = DatePickerDialog(
-            requireContext(),
-            { _, year, month, dayOfMonth ->
-                val formattedDate = String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year)
-                editText.setText(formattedDate)
-            },
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        datePicker.show()
-    }
-
-    private fun saveVetVisit(dialogView: View) {
-        val topic = dialogView.findViewById<EditText>(R.id.editVisitTopic).text.toString()
-        val dateString = dialogView.findViewById<EditText>(R.id.editVisitDate).text.toString()
-
-        if (topic.isEmpty() || dateString.isEmpty()) {
-            Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show()
-            return
-        }
-
+    private fun addVetVisit(topic: String, dateStr: String) {
         val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val visitDate = dateFormat.parse(dateString) ?: return
-
-        val newVisit = hashMapOf(
-            "petId" to petId,
-            "topic" to topic,
-            "visitDate" to visitDate
-        )
-
+        val visitDate = dateFormat.parse(dateStr) ?: return
+        val newVisitData = hashMapOf("petId" to petId, "topic" to topic, "visitDate" to visitDate)
         FirebaseFirestore.getInstance().collection("vetVisits")
-            .add(newVisit)
-            .addOnSuccessListener {
+            .add(newVisitData)
+            .addOnSuccessListener { docRef ->
                 Toast.makeText(requireContext(), "Visit added!", Toast.LENGTH_SHORT).show()
-                val addedVisit = VetVisit(topic, visitDate)
-
-                visitList.add(addedVisit) // ✅ Add to list
-                visitList.sortByDescending { it.visitDate } // ✅ Keep sorted
-
-                visitAdapter.notifyItemInserted(visitList.indexOf(addedVisit))
+                val addedVisit = VetVisit(docRef.id, topic, visitDate)
+                visitList.add(addedVisit)
+                visitList.sortByDescending { it.visitDate }
+                visitAdapter.notifyDataSetChanged()
                 updateNextAndLastVisit()
+                petId?.let { id -> appDatabase.vetVisitDao.insertVetVisit(addedVisit, id) }
             }
             .addOnFailureListener {
                 Toast.makeText(requireContext(), "Failed to add visit", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun saveVetToFirestore(dialogView: View) {
-        val vetName = dialogView.findViewById<EditText>(R.id.editVetName).text.toString()
-        val vetPhone = dialogView.findViewById<EditText>(R.id.editVetPhone).text.toString()
-
-        if (vetName.isEmpty() || vetPhone.isEmpty()) {
-            Toast.makeText(requireContext(), "Please fill all fields", Toast.LENGTH_SHORT).show()
-            return
+    private fun showVetDialog(existingVet: Vet?) {
+        val dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_add_vet, null)
+        val vetNameInput = dialogView.findViewById<EditText>(R.id.editVetName)
+        val vetPhoneInput = dialogView.findViewById<EditText>(R.id.editVetPhone)
+        val title = if (existingVet == null) "Add Vet" else "Edit Vet"
+        val dialog = AlertDialog.Builder(requireContext())
+            .setView(dialogView)
+            .setTitle(title)
+            .setPositiveButton("Save", null)
+            .setNegativeButton("Cancel", null)
+            .create()
+        dialog.show()
+        if (existingVet != null) {
+            vetNameInput.setText(existingVet.vetName)
+            vetPhoneInput.setText(existingVet.phoneNumber)
         }
+        val originalName = vetNameInput.text.toString()
+        val originalPhone = vetPhoneInput.text.toString()
+        val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+        saveButton.isEnabled = false
+        fun shouldEnableSaveButton(): Boolean {
+            val name = vetNameInput.text.toString().trim()
+            val phone = vetPhoneInput.text.toString().trim()
+            if (name.isEmpty() || phone.isEmpty()) return false
+            return if (existingVet != null) {
+                name != originalName || phone != originalPhone
+            } else true
+        }
+        val textWatcher = object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                saveButton.isEnabled = shouldEnableSaveButton()
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        }
+        vetNameInput.addTextChangedListener(textWatcher)
+        vetPhoneInput.addTextChangedListener(textWatcher)
+        saveButton.setOnClickListener {
+            val newName = vetNameInput.text.toString().trim()
+            val newPhone = vetPhoneInput.text.toString().trim()
+            if (existingVet == null) {
+                addVet(newName, newPhone)
+            } else {
+                updateVet(existingVet.vetId, newName, newPhone)
+            }
+            dialog.dismiss()
+        }
+    }
 
+    private fun addVet(newName: String, newPhone: String) {
         val db = FirebaseFirestore.getInstance()
-        val vetData = hashMapOf(
-            "vetName" to vetName,
-            "phoneNumber" to vetPhone
-        )
-
-        // ✅ Add new vet to Firestore
+        val vetData = mapOf("vetName" to newName, "phoneNumber" to newPhone)
         db.collection("vets")
             .add(vetData)
-            .addOnSuccessListener { vetDocRef ->
-                val newVetId = vetDocRef.id // Get the new vet's ID
-
-                // ✅ Update the pet document with the new vetId
-                petId?.let { petId ->
-                    db.collection("pets").document(petId)
+            .addOnSuccessListener { docRef ->
+                val newVetId = docRef.id
+                petId?.let { id ->
+                    db.collection("pets").document(id)
                         .update("vetId", newVetId)
                         .addOnSuccessListener {
                             Toast.makeText(requireContext(), "Vet added successfully!", Toast.LENGTH_SHORT).show()
-                            vetId = newVetId // Update local variable
-                            vetNameText.text = vetName
-                            vetPhoneText.text = vetPhone
-
+                            vetId = newVetId
+                            vetNameText.text = newName
+                            vetPhoneText.text = newPhone
                             addVetSection.visibility = View.GONE
                             vetSection.visibility = View.VISIBLE
                             vetDets.visibility = View.VISIBLE
-
                             val mainActivity = requireActivity() as MainActivity
                             mainActivity.vetIdGlobal = newVetId
+                            val vet = Vet(newVetId, newName, newPhone)
+                            appDatabase.vetDao.insertVet(vet)
                         }
                         .addOnFailureListener {
                             Toast.makeText(requireContext(), "Failed to link vet to pet", Toast.LENGTH_SHORT).show()
@@ -298,12 +300,38 @@ class HealthFragment : Fragment() {
             }
     }
 
+    private fun updateVet(vetId: String, newName: String, newPhone: String) {
+        FirebaseFirestore.getInstance().collection("vets").document(vetId)
+            .update(mapOf("vetName" to newName, "phoneNumber" to newPhone))
+            .addOnSuccessListener {
+                vetNameText.text = newName
+                vetPhoneText.text = newPhone
+                val vet = Vet(vetId, newName, newPhone)
+                appDatabase.vetDao.insertVet(vet)
+                Toast.makeText(requireContext(), "Vet updated!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Failed to update vet", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun showAddVetDialog() {
+        showVetDialog(null)
+    }
+
+    private fun showDatePicker(editText: EditText) {
+        val calendar = Calendar.getInstance()
+        val datePicker = DatePickerDialog(requireContext(), { _, year, month, dayOfMonth ->
+            val formattedDate = String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year)
+            editText.setText(formattedDate)
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH))
+        datePicker.show()
+    }
+
     private fun updateNextAndLastVisit() {
         val today = Date()
-
         val pastVisits = visitList.filter { it.visitDate.before(today) }.sortedByDescending { it.visitDate }
         val futureVisits = visitList.filter { it.visitDate.after(today) }.sortedBy { it.visitDate }
-
         lastVisitText.text = if (pastVisits.isNotEmpty()) formatDate(pastVisits.first().visitDate.toString()) else "-"
         nextVisitText.text = if (futureVisits.isNotEmpty()) formatDate(futureVisits.first().visitDate.toString()) else "-"
     }
@@ -312,11 +340,29 @@ class HealthFragment : Fragment() {
         return try {
             val inputFormat = SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH)
             val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-
             val date: Date = inputFormat.parse(dateString) ?: return dateString
             outputFormat.format(date)
         } catch (e: Exception) {
-            dateString // Return the original if parsing fails
+            dateString
+        }
+    }
+
+    override fun onDeleteVetVisit(visit: VetVisit) {
+        petId?.let { id ->
+            FirebaseFirestore.getInstance().collection("vetVisits")
+                .whereEqualTo("petId", id)
+                .whereEqualTo("topic", visit.topic)
+                .whereEqualTo("visitDate", visit.visitDate)
+                .get()
+                .addOnSuccessListener { documents ->
+                    for (doc in documents) {
+                        doc.reference.delete()
+                    }
+                    visitList.remove(visit)
+                    visitAdapter.notifyDataSetChanged()
+                    updateNextAndLastVisit()
+                    appDatabase.vetVisitDao.deleteVetVisit(visit.id)
+                }
         }
     }
 }

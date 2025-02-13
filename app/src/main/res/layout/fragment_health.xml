@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
+    android:paddingRight="16dp"
+    android:paddingLeft="16dp"
+    android:paddingTop="16dp"
     android:background="@color/white"
     tools:context=".health.HealthFragment">
 
@@ -101,7 +103,7 @@
 
             <!-- 📌 Vet Section -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:id="@+id/vetSection"
@@ -111,6 +113,7 @@
                 <!-- Vet Icon -->
                 <ImageView
                     android:id="@+id/vetIcon"
+                    android:layout_gravity="center_vertical"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@drawable/ic_vet"
@@ -120,6 +123,7 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:gravity="center"
                     android:orientation="vertical"
                     android:layout_marginStart="8dp">
 
@@ -139,23 +143,33 @@
                         android:textSize="16sp"
                         android:textColor="@color/primaryColor" />
                 </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/editVetButton"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_edit"
+                    android:layout_marginLeft="10dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="Add Vet"/>
             </LinearLayout>
 
         <!-- Weight -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:src="@drawable/ic_weight"
                     android:contentDescription="Weight Icon"/>
 
                 <TextView
-                    android:text="Weight: "
+                    android:text="Last Weight Check: "
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_width="wrap_content"
@@ -172,15 +186,15 @@
 
             <!-- Last Visit -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:layout_marginTop="8dp">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:src="@drawable/ic_calendar"
                     android:contentDescription="Calendar Icon"/>
 
@@ -202,15 +216,15 @@
 
             <!-- Next Visit -->
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:layout_marginTop="8dp">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
                     android:src="@drawable/ic_calendar"
                     android:contentDescription="Calendar Icon"/>
 
@@ -232,7 +246,6 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 📌 Vet Visits Title & Button Row -->
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/visitsHeader"
         android:layout_width="match_parent"
@@ -240,7 +253,6 @@
         app:layout_constraintTop_toBottomOf="@id/healthStats"
         android:layout_marginTop="16dp">
 
-        <!-- 📌 Vet Visits Title -->
         <TextView
             android:id="@+id/vetVisitsTitle"
             android:layout_width="wrap_content"
@@ -249,9 +261,9 @@
             android:textSize="18sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
 
-        <!-- 📌 Add Visit Button -->
         <ImageButton
             android:id="@+id/addVisitButton"
             android:layout_width="36dp"

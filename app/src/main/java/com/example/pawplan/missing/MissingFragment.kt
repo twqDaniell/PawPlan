@@ -132,7 +132,7 @@ class MissingFragment : Fragment() {
                     val missingPet = MissingPet(
                         postId = doc.id,
                         petId = doc.getString("petId") ?: "",
-                        userId = doc.getString("userId") ?: "",
+                        ownerId = doc.getString("userId") ?: "",
                         description = doc.getString("description") ?: "",
                         lostDate = doc.getDate("lostDate") ?: Date(),
                         picture = doc.getString("picture") ?: ""
@@ -177,7 +177,7 @@ class MissingFragment : Fragment() {
                     val missingPet = MissingPet(
                         postId = doc.id,
                         petId = doc.getString("petId") ?: "",
-                        userId = doc.getString("userId") ?: "",
+                        ownerId = doc.getString("userId") ?: "",
                         description = doc.getString("description") ?: "",
                         lostDate = doc.getDate("lostDate") ?: Date(),
                         picture = doc.getString("picture") ?: ""

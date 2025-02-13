@@ -3,7 +3,9 @@ package com.example.pawplan.missing
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.example.pawplan.R
@@ -33,12 +35,11 @@ class MissingPetAdapter(
 
     override fun getItemCount(): Int = displayedPets.size
 
-    // ✅ Filter List Without Refetching
     fun filterList(petId: String?, showOnlyMyPosts: Boolean) {
         displayedPets = if (showOnlyMyPosts && petId != null) {
             allMissingPets.filter { it.petId == petId }.toMutableList()
         } else {
-            allMissingPets.toMutableList() // Show all posts
+            allMissingPets.toMutableList()
         }
         notifyDataSetChanged()
     }
@@ -49,6 +50,7 @@ class MissingPetAdapter(
         private val petDetails: TextView = view.findViewById(R.id.missingPetDetails)
         private val lostDate: TextView = view.findViewById(R.id.lostDate)
         private val petDescription: TextView = view.findViewById(R.id.missingPetDescription)
+        private val ownerDetails: TextView = view.findViewById(R.id.ownerDetails)
         private val editButton: ImageButton = view.findViewById(R.id.editPostButton)
         private val deleteButton: ImageButton = view.findViewById(R.id.deletePostButton)
 
@@ -56,7 +58,6 @@ class MissingPetAdapter(
             petImage.load(missingPet.picture)
             lostDate.text = "Lost on: ${formatDate(missingPet.lostDate)}"
             petDescription.text = missingPet.description
-
             FirebaseFirestore.getInstance().collection("pets")
                 .document(missingPet.petId)
                 .get()
@@ -66,16 +67,27 @@ class MissingPetAdapter(
                     val color = doc.getString("petColor") ?: "Unknown Color"
                     petName.text = name
                     petDetails.text = "$color $breed"
+                    val ownerId = doc.getString("ownerId") ?: ""
+                    if (ownerId.isNotEmpty()) {
+                        FirebaseFirestore.getInstance().collection("users")
+                            .document(ownerId)
+                            .get()
+                            .addOnSuccessListener { document ->
+                                val ownerName = document.getString("name") ?: "Unknown"
+                                val ownerPhone = document.getString("phone_number") ?: "Unknown"
+                                ownerDetails.text = "$ownerName 0${ownerPhone.substring(4)}"
+                            }
+                    } else {
+                        ownerDetails.text = "Unknown owner"
+                    }
                 }
-
-            if (missingPet.userId == FirebaseAuth.getInstance().currentUser?.uid) {
+            if (missingPet.ownerId == FirebaseAuth.getInstance().currentUser?.uid) {
                 editButton.visibility = View.VISIBLE
                 deleteButton.visibility = View.VISIBLE
             } else {
                 editButton.visibility = View.GONE
                 deleteButton.visibility = View.GONE
             }
-
             editButton.setOnClickListener { onEditClick(missingPet) }
             deleteButton.setOnClickListener { onDeleteClick(missingPet) }
         }

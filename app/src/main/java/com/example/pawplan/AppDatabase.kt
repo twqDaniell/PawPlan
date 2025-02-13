@@ -3,9 +3,13 @@ package com.example.pawplan
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.example.pawplan.models.Allergy
 import com.example.pawplan.models.Pet
 import com.example.pawplan.models.User
 import com.example.pawplan.models.Memory
+import com.example.pawplan.models.Vet
+import com.example.pawplan.models.VetVisit
+import java.util.*
 
 class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", null, 2) {
 
@@ -36,7 +40,6 @@ class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", nu
             """
         )
 
-        // Create memories table
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS memories (
@@ -46,12 +49,47 @@ class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", nu
             )
             """
         )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS vets (
+                vetId TEXT PRIMARY KEY,
+                vetName TEXT NOT NULL,
+                phoneNumber TEXT NOT NULL
+            )
+            """
+        )
+
+        // Store visitDate as epoch milliseconds
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS vetVisits (
+                id TEXT PRIMARY KEY,
+                petId TEXT NOT NULL,
+                topic TEXT NOT NULL,
+                visitDate INTEGER NOT NULL
+            )
+            """
+        )
+
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS allergies (
+                id TEXT PRIMARY KEY,
+                allergyName TEXT NOT NULL,
+                petId TEXT NOT NULL
+            )
+            """
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS users")
         db.execSQL("DROP TABLE IF EXISTS pets")
         db.execSQL("DROP TABLE IF EXISTS memories")
+        db.execSQL("DROP TABLE IF EXISTS vets")
+        db.execSQL("DROP TABLE IF EXISTS vetVisits")
+        db.execSQL("DROP TABLE IF EXISTS allergies")
         onCreate(db)
     }
 
@@ -130,4 +168,90 @@ class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", nu
             writableDatabase.execSQL("DELETE FROM memories")
         }
     }
+
+    val vetDao = object : VetDao {
+        override fun insertVet(vet: Vet) {
+            writableDatabase.execSQL(
+                "INSERT OR REPLACE INTO vets (vetId, vetName, phoneNumber) VALUES (?, ?, ?)",
+                arrayOf(vet.vetId, vet.vetName, vet.phoneNumber)
+            )
+        }
+        override fun getVet(vetId: String): Vet? {
+            val cursor = readableDatabase.rawQuery("SELECT * FROM vets WHERE vetId = ? LIMIT 1", arrayOf(vetId))
+            return if (cursor.moveToFirst()) {
+                Vet(
+                    cursor.getString(0),
+                    cursor.getString(1),
+                    cursor.getString(2)
+                )
+            } else null
+        }
+        override fun clearVets() {
+            writableDatabase.execSQL("DELETE FROM vets")
+        }
+    }
+
+    val vetVisitDao = object : VetVisitDao {
+        override fun insertVetVisit(visit: VetVisit, petId: String) {
+            writableDatabase.execSQL(
+                "INSERT OR REPLACE INTO vetVisits (id, petId, topic, visitDate) VALUES (?, ?, ?, ?)",
+                arrayOf(visit.id, petId, visit.topic, visit.visitDate.time)
+            )
+        }
+        override fun getVetVisitsByPetId(petId: String): List<VetVisit> {
+            val cursor = readableDatabase.rawQuery("SELECT * FROM vetVisits WHERE petId = ?", arrayOf(petId))
+            val list = mutableListOf<VetVisit>()
+            if (cursor.moveToFirst()) {
+                do {
+                    val id = cursor.getString(1)
+                    val topic = cursor.getString(2)
+                    val visitDateMillis = cursor.getLong(3)
+                    val visitDate = Date(visitDateMillis)
+                    list.add(VetVisit(id, topic, visitDate))
+                } while (cursor.moveToNext())
+            }
+            cursor.close()
+            return list
+        }
+        override fun deleteVetVisit(id: String) {
+            writableDatabase.execSQL("DELETE FROM vetVisits WHERE id = ?", arrayOf(id))
+        }
+        override fun clearVetVisits() {
+            writableDatabase.execSQL("DELETE FROM vetVisits")
+        }
+    }
+
+    val allergyDao = object : AllergyDao {
+        override fun insertAllergy(allergy: Allergy, petId: String) {
+            val id = allergy.id.ifEmpty { UUID.randomUUID().toString() }
+            writableDatabase.execSQL(
+                "INSERT OR REPLACE INTO allergies (id, allergyName, petId) VALUES (?, ?, ?)",
+                arrayOf(id, allergy.allergyName, petId)
+            )
+        }
+
+        override fun getAllergiesByPetId(petId: String): List<Allergy> {
+            val cursor = readableDatabase.rawQuery("SELECT * FROM allergies WHERE petId = ?", arrayOf(petId))
+            val list = mutableListOf<Allergy>()
+            if (cursor.moveToFirst()) {
+                do {
+                    val id = cursor.getString(0)
+                    val allergyName = cursor.getString(1)
+                    val petIdRetrieved = cursor.getString(2)
+                    list.add(Allergy(id, allergyName, petIdRetrieved))
+                } while(cursor.moveToNext())
+            }
+            cursor.close()
+            return list
+        }
+
+        override fun deleteAllergy(id: String) {
+            writableDatabase.execSQL("DELETE FROM allergies WHERE id = ?", arrayOf(id))
+        }
+
+        override fun clearAllergies() {
+            writableDatabase.execSQL("DELETE FROM allergies")
+        }
+    }
+
 }

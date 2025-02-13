@@ -21,4 +21,13 @@
         android:layout_height="wrap_content"
         android:text="21/02/2025"
         android:textSize="16sp"/>
+
+    <ImageButton
+        android:id="@+id/deleteVetVisitButton"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_delete"
+        android:background="@null"
+        android:layout_marginLeft="5dp"
+        android:contentDescription="Delete Allergy"/>
 </LinearLayout>

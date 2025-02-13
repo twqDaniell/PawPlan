@@ -6,10 +6,14 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pawplan.R
-import coil.load
+import com.squareup.picasso.Picasso
 
 class MemoriesAdapter(private val memoryList: MutableList<String>) :
     RecyclerView.Adapter<MemoriesAdapter.MemoryViewHolder>() {
+
+    inner class MemoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val memoryImageView: ImageView = itemView.findViewById(R.id.memory_image)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MemoryViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -18,17 +22,13 @@ class MemoriesAdapter(private val memoryList: MutableList<String>) :
     }
 
     override fun onBindViewHolder(holder: MemoryViewHolder, position: Int) {
-        val imageUrl = memoryList[position]
-        holder.memoryImageView.load(imageUrl) {
-            crossfade(true)
-            placeholder(R.drawable.placeholder)
-            error(R.drawable.placeholder)
-        }
+        val memoryUrl = memoryList[position]
+        Picasso.get()
+            .load(memoryUrl)
+            .placeholder(R.drawable.placeholder)
+            .error(R.drawable.placeholder)
+            .into(holder.memoryImageView)
     }
 
     override fun getItemCount(): Int = memoryList.size
-
-    class MemoryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val memoryImageView: ImageView = itemView.findViewById(R.id.memory_image)
-    }
 }

@@ -14,17 +14,6 @@
         android:padding="16dp"
         android:background="@color/white">
 
-        <!-- User Info Section -->
-        <TextView
-            android:id="@+id/userNameTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Owner: Daniel"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="@color/black"
-            android:layout_marginBottom="12dp"/>
-
         <!-- Pet Profile Image -->
         <ImageView
             android:id="@+id/petImageView"
@@ -46,6 +35,17 @@
             android:textStyle="bold"
             android:textColor="@color/black"
             android:layout_marginBottom="8dp"/>
+
+        <!-- User Info Section -->
+        <TextView
+            android:id="@+id/userNameTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Owner: Daniel"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"
+            android:layout_marginBottom="12dp"/>
 
         <!-- Pet Details -->
         <TextView

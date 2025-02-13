@@ -11,9 +11,9 @@
     <ImageView
         android:id="@+id/missingPetImage"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:scaleType="centerCrop"
-        android:src="@drawable/placeholder"
+        android:layout_height="250dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_add_photo"
         android:background="@android:color/darker_gray"
         android:contentDescription="Missing Pet Image"/>
 
@@ -32,7 +32,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
         android:hint="Enter description"
+        app:boxCornerRadiusTopEnd="10dp"
+        app:boxCornerRadiusBottomEnd="10dp"
+        app:boxCornerRadiusBottomStart="10dp"
+        app:boxCornerRadiusTopStart="10dp"
         app:boxStrokeColor="@color/primaryColor"
         app:boxBackgroundMode="outline">
 
@@ -42,9 +47,9 @@
             android:layout_height="wrap_content"
             android:minHeight="100dp"
             android:padding="10dp"
-            android:gravity="top"
-            android:background="@android:color/white"/>
+            android:gravity="top"/>
     </com.google.android.material.textfield.TextInputLayout>
+
 
     <!-- 📌 Progress Bar (Initially Hidden) -->
     <ProgressBar

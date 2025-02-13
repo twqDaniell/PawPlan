@@ -1,8 +1,10 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_margin="8dp"
-    android:background="@android:color/white">
+    app:cardCornerRadius="10dp"
+    android:backgroundTint="#F6F6F6">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -63,15 +65,14 @@
             android:textSize="14sp"
             android:textColor="@color/black"/>
 
-        <!-- Lost Date -->
+        <!-- Owner Details -->
         <TextView
-            android:id="@+id/lostDate"
+            android:id="@+id/ownerDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Lost on: 07/02/2025"
+            android:text="Daniel- 050550055"
             android:textSize="14sp"
-            android:textColor="@color/black"
-            android:layout_marginTop="4dp"/>
+            android:textColor="@color/black"/>
 
         <!-- Description -->
         <TextView
@@ -79,6 +80,16 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Description of the missing pet..."
+            android:textSize="14sp"
+            android:textColor="@color/black"
+            android:layout_marginTop="4dp"/>
+
+        <!-- Lost Date -->
+        <TextView
+            android:id="@+id/lostDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Lost on: 07/02/2025"
             android:textSize="14sp"
             android:textColor="@color/black"
             android:layout_marginTop="4dp"/>
