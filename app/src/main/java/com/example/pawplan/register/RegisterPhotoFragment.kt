@@ -15,6 +15,9 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.pawplan.MainActivity
 import com.example.pawplan.R
+import com.example.pawplan.AppDatabase
+import com.example.pawplan.models.User
+import com.example.pawplan.models.Pet
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -81,11 +84,13 @@ class RegisterPhotoFragment : Fragment() {
                 }.addOnFailureListener { e ->
                     Log.e("FirebaseStorage", "Failed to get download URL: ${e.message}", e)
                     Toast.makeText(requireContext(), "Failed to upload photo", Toast.LENGTH_SHORT).show()
+                    progressBar.visibility = View.GONE
                 }
             }
             .addOnFailureListener { e ->
                 Log.e("FirebaseStorage", "Photo upload failed: ${e.message}", e)
                 Toast.makeText(requireContext(), "Failed to upload photo", Toast.LENGTH_SHORT).show()
+                progressBar.visibility = View.GONE
             }
     }
 
@@ -96,20 +101,29 @@ class RegisterPhotoFragment : Fragment() {
         val user = auth.currentUser
 
         if(user != null) {
-            val userId = user.uid // ✅ Get the new user's UID
+            val userId = user.uid // Get the new user's UID
 
             val userRef = FirebaseFirestore.getInstance().collection("users").document(userId)
 
             val userData = hashMapOf(
                 "name" to args.userName,
-                "phone_number" to args.phoneNumber,
+                "phone_number" to args.phoneNumber
             )
 
             userRef.set(userData)
                 .addOnSuccessListener {
                     Log.d("Firestore", "User registered and authenticated")
 
-                    // ✅ Keep the user authenticated
+                    // Update Room with user data
+                    val appDatabase = AppDatabase(requireContext())
+                    val localUser = User(
+                        id = userId,
+                        name = args.userName,
+                        phoneNumber = args.phoneNumber
+                    )
+                    appDatabase.userDao.insertUser(localUser)
+
+                    // Keep the user authenticated
                     auth.updateCurrentUser(auth.currentUser!!)
                         .addOnSuccessListener {
                             Log.d("Auth", "User session persisted")
@@ -117,10 +131,12 @@ class RegisterPhotoFragment : Fragment() {
                         }
                         .addOnFailureListener { e ->
                             Log.e("Auth", "Session persistence failed: ${e.message}", e)
+                            progressBar.visibility = View.GONE
                         }
                 }
                 .addOnFailureListener { e ->
                     Log.e("Firestore", "Error saving user data: ${e.message}", e)
+                    progressBar.visibility = View.GONE
                 }
         }
     }
@@ -150,6 +166,21 @@ class RegisterPhotoFragment : Fragment() {
             .set(petData)
             .addOnSuccessListener {
                 Log.d("Firestore", "Pet data saved successfully with ownerId: $ownerId")
+
+                // Update Room with pet data
+                val appDatabase = AppDatabase(requireContext())
+                val pet = Pet(
+                    id = petId,
+                    name = args.petName,
+                    breed = args.petBreed,
+                    weight = args.petWeight,
+                    color = args.petColor,
+                    birthDate = args.petBirthDate,
+                    adoptionDate = args.petAdoptionDate,
+                    picture = photoUrl,
+                    foodImage = "" // Adjust as needed
+                )
+                appDatabase.petDao.insertPet(pet)
 
                 val action = RegisterPhotoFragmentDirections
                     .actionRegisterPhotoFragmentToProfileFragment(
@@ -191,6 +222,7 @@ class RegisterPhotoFragment : Fragment() {
             .addOnFailureListener { e ->
                 Log.e("Firestore", "Error saving pet data: ${e.message}", e)
                 Toast.makeText(requireContext(), "Error saving pet data: ${e.message}", Toast.LENGTH_SHORT).show()
+                progressBar.visibility = View.GONE
             }
     }
 }

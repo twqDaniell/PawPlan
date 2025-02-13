@@ -91,4 +91,6 @@ dependencies {
 
     implementation("com.google.accompanist:accompanist-swiperefresh:0.28.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation("androidx.room:room-runtime:2.5.2")
+    implementation("androidx.room:room-ktx:2.5.2")
 }

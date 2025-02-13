@@ -22,9 +22,10 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
-
-private lateinit var auth: FirebaseAuth
-private lateinit var db: FirebaseFirestore
+// Import Room database and models
+import com.example.pawplan.AppDatabase
+import com.example.pawplan.models.User
+import com.example.pawplan.models.Pet
 
 class SignInCodeFragment : Fragment() {
     private lateinit var progressBar: ProgressBar
@@ -44,8 +45,8 @@ class SignInCodeFragment : Fragment() {
         )
         progressBar = view.findViewById(R.id.progressBar)
 
-        auth = FirebaseAuth.getInstance()
-        db = FirebaseFirestore.getInstance()
+        val auth = FirebaseAuth.getInstance()
+        val db = FirebaseFirestore.getInstance()
 
         setupInputMovements(codeInputs)
 
@@ -57,27 +58,14 @@ class SignInCodeFragment : Fragment() {
 
         val textWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val isFormFilled = codeInputs[0].text.toString().isNotEmpty() &&
-                        codeInputs[1].text.toString().isNotEmpty() &&
-                        codeInputs[2].text.toString().isNotEmpty() &&
-                        codeInputs[3].text.toString().isNotEmpty() &&
-                        codeInputs[4].text.toString().isNotEmpty() &&
-                        codeInputs[5].text.toString().isNotEmpty()
+                val isFormFilled = codeInputs.all { it.text.toString().isNotEmpty() }
                 verifyButton.isEnabled = isFormFilled
             }
-
-            override fun afterTextChanged(s: Editable?) {
-            }
+            override fun afterTextChanged(s: Editable?) {}
         }
 
-        codeInputs[0].addTextChangedListener(textWatcher)
-        codeInputs[1].addTextChangedListener(textWatcher)
-        codeInputs[2].addTextChangedListener(textWatcher)
-        codeInputs[3].addTextChangedListener(textWatcher)
-        codeInputs[4].addTextChangedListener(textWatcher)
-        codeInputs[5].addTextChangedListener(textWatcher)
+        codeInputs.forEach { it.addTextChangedListener(textWatcher) }
 
         if (verificationId != null) {
             verifyButton.setOnClickListener {
@@ -127,7 +115,6 @@ class SignInCodeFragment : Fragment() {
                         inputs[i - 1].requestFocus()
                     }
                 }
-
                 override fun afterTextChanged(s: Editable?) {}
             })
         }
@@ -154,7 +141,7 @@ class SignInCodeFragment : Fragment() {
                     val userName = userDoc.getString("name") ?: "Unknown"
                     val userId = userDoc.id // This is the `ownerId` in pets collection
 
-                    // ✅ Fetch pet details using `ownerId`
+                    // Fetch pet details using `ownerId`
                     fetchPetDetails(userId, userName, phoneNumber)
                 } else {
                     progressBar.visibility = View.GONE
@@ -184,18 +171,40 @@ class SignInCodeFragment : Fragment() {
                     val petBreed = petDoc.getString("petBreed") ?: "Unknown"
                     val petWeight = petDoc.getLong("petWeight")?.toInt() ?: 0
                     val petColor = petDoc.getString("petColor") ?: "Unknown"
-                    val petBirthDate = petDoc.getString("petBirthDate").toString() ?: "Unknown"
-                    val petAdoptionDate = petDoc.getString("petAdoptionDate").toString() ?: "Unknown"
+                    val petBirthDate = petDoc.getDate("petBirthDate") ?: "Unknown"
+                    val petAdoptionDate = petDoc.getDate("petAdoptionDate") ?: "Unknown"
                     val foodImage = petDoc.getString("foodImage") ?: ""
                     val vetId = petDoc.getString("vetId") ?: ""
                     val petId = petDoc.id
                     val petPicture = petDoc.getString("picture") ?: ""
 
-                    // ✅ Use SafeArgs to pass data to ProfileFragment
+                    // Update Room database with user and pet data
+                    val appDatabase = AppDatabase(requireContext())
+                    val user = User(
+                        id = ownerId,
+                        name = userName,
+                        phoneNumber = phoneNumber
+                    )
+                    appDatabase.userDao.insertUser(user)
+
+                    val pet = Pet(
+                        id = petId,
+                        name = petName,
+                        breed = petBreed,
+                        weight = petWeight,
+                        color = petColor,
+                        birthDate = petBirthDate.toString(),
+                        adoptionDate = petAdoptionDate.toString(),
+                        picture = petPicture,
+                        foodImage = foodImage
+                    )
+                    appDatabase.petDao.insertPet(pet)
+
+                    // Use SafeArgs to pass data to ProfileFragment
                     val action = SignInCodeFragmentDirections
                         .actionSignInCodeFragmentToProfileFragment(
                             userName, phoneNumber, petName, petType, petBreed,
-                            petWeight.toString(), petColor, petBirthDate, petAdoptionDate, foodImage, vetId, petId, petPicture
+                            petWeight.toString(), petColor, petBirthDate.toString(), petAdoptionDate.toString(), foodImage, vetId, petId, petPicture
                         )
                     findNavController().navigate(action)
 
@@ -208,8 +217,8 @@ class SignInCodeFragment : Fragment() {
                     mainActivity.petPictureGlobal = petPicture
                     mainActivity.petColorGlobal = petColor
                     mainActivity.petTypeGlobal = petType
-                    mainActivity.petBirthDateGlobal = petBirthDate
-                    mainActivity.petAdoptionDateGlobal = petAdoptionDate
+                    mainActivity.petBirthDateGlobal = petBirthDate.toString()
+                    mainActivity.petAdoptionDateGlobal = petAdoptionDate.toString()
                     mainActivity.userNameGlobal = userName
                     mainActivity.phoneNumberGlobal = phoneNumber
                     mainActivity.vetIdGlobal = vetId

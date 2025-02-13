@@ -32,6 +32,10 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
 
+// Room imports
+import com.example.pawplan.AppDatabase
+import com.example.pawplan.models.Pet
+
 class ProfileFragment : Fragment() {
 
     private lateinit var userName: String
@@ -58,53 +62,96 @@ class ProfileFragment : Fragment() {
     private lateinit var petImageView: ImageView
     private var isProfilePictureUpload = false
 
+    // Room database instance
+    private lateinit var appDatabase: AppDatabase
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         val view = inflater.inflate(R.layout.fragment_profile, container, false)
 
-        // ✅ Receive arguments using SafeArgs
-        val args = ProfileFragmentArgs.fromBundle(requireArguments())
-        userName = args.userName
-        phoneNumber = args.phoneNumber
-        petName = args.petName
-        petType = args.petType
-        petBreed = args.petBreed
-        petWeight = args.petWeight.toInt()
-        petColor = args.petColor
-        petBirthDate = args.petBirthDate
-        petAdoptionDate = args.petAdoptionDate
-        petPicture = args.petPicture
-        foodImage = args.foodImage
-        vetId = args.vetId
-        petId = args.petId // Ensure you pass this from previous fragments
+        // Initialize Room database
+        appDatabase = AppDatabase(requireContext())
 
-        // ✅ Update UI with received data
-        view.findViewById<TextView>(R.id.userNameTextView).text = "$userName- ${phoneNumber.replace("+972", "0")}"
+        // Check if pet data exists in Room; if yes, use it; otherwise, use SafeArgs and store in Room
+        val localPet = appDatabase.petDao.getPet()
+        if (localPet != null) {
+            petName = localPet.name
+            petBreed = localPet.breed
+            petWeight = localPet.weight
+            petColor = localPet.color
+            petBirthDate = localPet.birthDate
+            petAdoptionDate = localPet.adoptionDate
+            petPicture = localPet.picture
+            foodImage = localPet.foodImage
+
+            // For additional fields not in Room, use SafeArgs
+            val args = ProfileFragmentArgs.fromBundle(requireArguments())
+            userName = args.userName
+            phoneNumber = args.phoneNumber
+            petType = args.petType
+            vetId = args.vetId
+            petId = args.petId
+        } else {
+            val args = ProfileFragmentArgs.fromBundle(requireArguments())
+            userName = args.userName
+            phoneNumber = args.phoneNumber
+            petName = args.petName
+            petType = args.petType
+            petBreed = args.petBreed
+            petWeight = args.petWeight.toInt()
+            petColor = args.petColor
+            petBirthDate = args.petBirthDate
+            petAdoptionDate = args.petAdoptionDate
+            petPicture = args.petPicture
+            foodImage = args.foodImage
+            vetId = args.vetId
+            petId = args.petId
+
+            // Insert pet data into Room
+            val pet = Pet(
+                id = petId,
+                name = petName,
+                breed = petBreed,
+                weight = petWeight,
+                color = petColor,
+                birthDate = petBirthDate,
+                adoptionDate = petAdoptionDate,
+                picture = petPicture,
+                foodImage = foodImage
+            )
+            appDatabase.petDao.insertPet(pet)
+        }
+
+        // Update UI with received data
+        view.findViewById<TextView>(R.id.userNameTextView).text =
+            "$userName- ${phoneNumber.replace("+972", "0")}"
         view.findViewById<TextView>(R.id.petNameTextView).text = petName
         view.findViewById<TextView>(R.id.petBreedTextView).text = "Breed: $petBreed"
         view.findViewById<TextView>(R.id.petWeightTextView).text = "Weight: $petWeight kg"
         view.findViewById<TextView>(R.id.petColorTextView).text = "Color: $petColor"
-        view.findViewById<TextView>(R.id.petBirthDateTextView).text = "Birth Date: ${formatDate(petBirthDate)}"
-        view.findViewById<TextView>(R.id.petAdoptionDateTextView).text = "Adoption Date: ${formatDate(petAdoptionDate)}"
+        view.findViewById<TextView>(R.id.petBirthDateTextView).text =
+            "Birth Date: ${formatDate(petBirthDate)}"
+        view.findViewById<TextView>(R.id.petAdoptionDateTextView).text =
+            "Adoption Date: ${formatDate(petAdoptionDate)}"
 
         petImageView = view.findViewById(R.id.petImageView)
 
-        // ✅ Load Pet Image
+        // Load Pet Image
         petImageView.load(petPicture) {
-            crossfade(true) // Smooth transition
-            placeholder(R.drawable.placeholder) // Placeholder while loading
-            error(R.drawable.placeholder) // Error image if URL fails
+            crossfade(true)
+            placeholder(R.drawable.placeholder)
+            error(R.drawable.placeholder)
         }
 
-        // ✅ Initialize RecyclerView
+        // Initialize RecyclerView
         memoriesRecyclerView = view.findViewById(R.id.memories_recycler)
         memoriesRecyclerView.layoutManager = GridLayoutManager(requireContext(), 3)
         memoryAdapter = MemoriesAdapter(memoryList)
         memoriesRecyclerView.adapter = memoryAdapter
 
-        // ✅ Upload Button & Progress Bar
+        // Upload Button & Progress Bar
         val uploadButton = view.findViewById<Button>(R.id.upload_button)
         uploadProgressBar = view.findViewById(R.id.uploadProgressBar)
         profilePictureProgressBar = view.findViewById(R.id.profileProgressBar)
@@ -113,17 +160,17 @@ class ProfileFragment : Fragment() {
             openImagePicker(isProfilePicture = false)
         }
 
-        // ✅ Click to Change Profile Picture
+        // Click to Change Profile Picture
         petImageView.setOnClickListener {
             openImagePicker(isProfilePicture = true)
         }
 
-        // ✅ Edit Profile Button Listener
+        // Edit Profile Button Listener
         view.findViewById<Button>(R.id.edit_profile_button).setOnClickListener {
             showEditProfileDialog()
         }
 
-        // ✅ Fetch Memories from Firestore
+        // Fetch Memories from Firestore
         fetchMemories()
 
         return view
@@ -147,7 +194,7 @@ class ProfileFragment : Fragment() {
             }
     }
 
-    // ✅ Open Image Picker
+    // Open Image Picker
     private fun openImagePicker(isProfilePicture: Boolean = false) {
         isProfilePictureUpload = isProfilePicture
         val intent = Intent(Intent.ACTION_PICK)
@@ -190,7 +237,7 @@ class ProfileFragment : Fragment() {
             }
     }
 
-    // ✅ Save Image URL to Firestore with Loader
+    // Save Image URL to Firestore with Loader
     private fun saveMemoryToFirestore(imageUrl: String) {
         val db = FirebaseFirestore.getInstance()
         val memoryData = hashMapOf(
@@ -200,13 +247,13 @@ class ProfileFragment : Fragment() {
 
         db.collection("memories").add(memoryData)
             .addOnSuccessListener {
-                uploadProgressBar.visibility = View.GONE // Hide progress bar
+                uploadProgressBar.visibility = View.GONE
                 memoryList.add(imageUrl)
                 memoryAdapter.notifyDataSetChanged()
                 Toast.makeText(requireContext(), "Memory added!", Toast.LENGTH_SHORT).show()
             }
             .addOnFailureListener {
-                uploadProgressBar.visibility = View.GONE // Hide progress bar
+                uploadProgressBar.visibility = View.GONE
                 Toast.makeText(requireContext(), "Failed to save memory", Toast.LENGTH_SHORT).show()
             }
     }
@@ -215,7 +262,6 @@ class ProfileFragment : Fragment() {
         return try {
             val inputFormat = SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH)
             val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-
             val date: Date = inputFormat.parse(dateString) ?: return dateString
             outputFormat.format(date)
         } catch (e: Exception) {
@@ -230,15 +276,15 @@ class ProfileFragment : Fragment() {
         val dialog = AlertDialog.Builder(requireContext())
             .setView(dialogView)
             .setTitle("Edit Profile")
-            .setPositiveButton("Save", null) // ✅ Handle manually
+            .setPositiveButton("Save", null) // Handle manually
             .setNegativeButton("Cancel", null)
             .create()
 
-        dialog.show() // ✅ Must call show() before accessing buttons
+        dialog.show() // Must call show() before accessing buttons
 
-        // ✅ Reference Save Button AFTER show()
+        // Reference Save Button AFTER show()
         val saveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-        saveButton.isEnabled = false // ✅ Initially disabled
+        saveButton.isEnabled = false // Initially disabled
 
         // Reference Views
         val petNameInput = dialogView.findViewById<EditText>(R.id.editPetName)
@@ -247,25 +293,25 @@ class ProfileFragment : Fragment() {
         val birthDateInput = dialogView.findViewById<EditText>(R.id.editPetBirthDate)
         val adoptionDateInput = dialogView.findViewById<EditText>(R.id.editPetAdoptionDate)
 
-        // ✅ Set Current Values (But don't trigger change listeners yet)
+        // Set Current Values (But don't trigger change listeners yet)
         petNameInput.setText(petName)
         petWeightInput.setText(petWeight.toString())
         birthDateInput.setText(formatDate(petBirthDate))
         adoptionDateInput.setText(formatDate(petAdoptionDate))
 
-        // ✅ Set Color Dropdown
+        // Set Color Dropdown
         val colors = arrayOf("Brown", "Black", "White", "Orange", "Gray", "Multicolor")
         val colorAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, colors)
         colorSpinner.adapter = colorAdapter
         colorSpinner.setSelection(colors.indexOf(petColor))
 
-        // ✅ Handle Date Pickers
+        // Handle Date Pickers
         birthDateInput.setOnClickListener { showDatePicker(birthDateInput) }
         adoptionDateInput.setOnClickListener { showDatePicker(adoptionDateInput) }
 
         loadBreedsForType(petType, breedDropdown)
 
-        // ✅ Store Original Values for Comparison
+        // Store Original Values for Comparison
         val originalValues = listOf(
             petName,
             petWeight.toString(),
@@ -277,7 +323,7 @@ class ProfileFragment : Fragment() {
 
         val inputFields = listOf(petNameInput, petWeightInput, birthDateInput, adoptionDateInput, breedDropdown)
 
-        // ✅ Function to Check for Changes & Empty Fields
+        // Function to Check for Changes & Empty Fields
         fun hasChangesAndValidInput(): Boolean {
             val allFilled = inputFields.all { it.text.toString().isNotBlank() }
             return allFilled && (
@@ -290,34 +336,33 @@ class ProfileFragment : Fragment() {
                     )
         }
 
-        // ✅ Add Text Change Listener
-        val textWatcher = object : android.text.TextWatcher {
-            override fun afterTextChanged(s: android.text.Editable?) {
+        // Add Text Change Listener
+        val textWatcher = object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
                 saveButton.isEnabled = hasChangesAndValidInput()
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         }
-
         inputFields.forEach { it.addTextChangedListener(textWatcher) }
 
-        // ✅ Listen for Spinner Changes
-        colorSpinner.onItemSelectedListener = object : android.widget.AdapterView.OnItemSelectedListener {
+        // Listen for Spinner Changes
+        colorSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 saveButton.isEnabled = hasChangesAndValidInput()
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
-        // ✅ Listen for Breed Dropdown Changes
+        // Listen for Breed Dropdown Changes
         breedDropdown.setOnItemClickListener { _, _, _, _ ->
             saveButton.isEnabled = hasChangesAndValidInput()
         }
 
-        // ✅ Ensure Button is Disabled Initially
+        // Ensure Button is Disabled Initially
         saveButton.isEnabled = false
 
-        // ✅ Save Button Click Handling
+        // Save Button Click Handling
         saveButton.setOnClickListener {
             val updatedPetColor = colorSpinner.selectedItem.toString()
             saveProfileChanges(dialogView, updatedPetColor)
@@ -336,7 +381,6 @@ class ProfileFragment : Fragment() {
                         Toast.makeText(requireContext(), "Failed to fetch dog breeds", Toast.LENGTH_SHORT).show()
                     }
                 }
-
                 override fun onFailure(call: Call<BreedsResponse>, t: Throwable) {
                     Toast.makeText(requireContext(), "Error fetching dog breeds", Toast.LENGTH_SHORT).show()
                 }
@@ -351,7 +395,6 @@ class ProfileFragment : Fragment() {
                         Toast.makeText(requireContext(), "Failed to fetch cat breeds", Toast.LENGTH_SHORT).show()
                     }
                 }
-
                 override fun onFailure(call: Call<List<CatBreed>>, t: Throwable) {
                     Toast.makeText(requireContext(), "Error fetching cat breeds", Toast.LENGTH_SHORT).show()
                 }
@@ -371,14 +414,12 @@ class ProfileFragment : Fragment() {
         dropdown.setOnClickListener {
             dropdown.showDropDown()
         }
-
-        // ✅ Set the existing breed as the initial value
         if (currentBreed != null && breeds.contains(currentBreed)) {
             dropdown.setText(currentBreed, false)
         }
     }
 
-    // ✅ Show Date Picker
+    // Show Date Picker
     private fun showDatePicker(editText: EditText) {
         val calendar = Calendar.getInstance()
         val year = calendar.get(Calendar.YEAR)
@@ -389,11 +430,10 @@ class ProfileFragment : Fragment() {
             val formattedDate = String.format("%02d/%02d/%04d", selectedDay, selectedMonth + 1, selectedYear)
             editText.setText(formattedDate)
         }, year, month, day)
-
         datePicker.show()
     }
 
-    // ✅ Save Changes to Firestore
+    // Save Changes to Firestore and update Room
     private fun saveProfileChanges(dialogView: View, updatedPetColor: String) {
         val updatedPetName = dialogView.findViewById<EditText>(R.id.editPetName).text.toString()
         val updatedPetBreed = dialogView.findViewById<EditText>(R.id.editPetBreed).text.toString()
@@ -408,7 +448,7 @@ class ProfileFragment : Fragment() {
             "petName" to updatedPetName,
             "petBreed" to updatedPetBreed,
             "petWeight" to updatedPetWeight,
-            "petColor" to updatedPetColor, // ✅ Now we use the correct color from spinner
+            "petColor" to updatedPetColor,
             "petBirthDate" to updatedPetBirthDate,
             "petAdoptionDate" to updatedPetAdoptionDate
         )
@@ -416,7 +456,6 @@ class ProfileFragment : Fragment() {
         petRef.update(updates)
             .addOnSuccessListener {
                 Toast.makeText(requireContext(), "Profile updated successfully!", Toast.LENGTH_SHORT).show()
-                // Refresh UI
                 petName = updatedPetName
                 petBreed = updatedPetBreed
                 petWeight = updatedPetWeight
@@ -432,12 +471,25 @@ class ProfileFragment : Fragment() {
                 mainActivity.petBirthDateGlobal = petBirthDate
                 mainActivity.petAdoptionDateGlobal = petAdoptionDate
 
+                // Update Room with new pet data
+                val updatedPet = Pet(
+                    id = petId,
+                    name = petName,
+                    breed = petBreed,
+                    weight = petWeight,
+                    color = petColor,
+                    birthDate = petBirthDate,
+                    adoptionDate = petAdoptionDate,
+                    picture = petPicture,
+                    foodImage = foodImage
+                )
+                appDatabase.petDao.insertPet(updatedPet)
+
                 val action = ProfileFragmentDirections
                     .actionGlobalProfileFragment(
                         userName, phoneNumber, petName, petType, petBreed,
                         petWeight.toString(), petColor, petBirthDate, petAdoptionDate, foodImage, vetId, petId, petPicture
                     )
-
                 findNavController().navigate(action)
             }
             .addOnFailureListener { e ->
@@ -445,10 +497,9 @@ class ProfileFragment : Fragment() {
             }
     }
 
-
-    // ✅ Upload New Profile Picture to Firebase Storage
+    // Upload New Profile Picture to Firebase Storage and update Room
     private fun uploadProfilePicture(imageUri: Uri) {
-        profilePictureProgressBar.visibility = View.VISIBLE // Show progress bar
+        profilePictureProgressBar.visibility = View.VISIBLE
         val storageRef = FirebaseStorage.getInstance().reference
         val fileName = "pet_pictures/${UUID.randomUUID()}.jpg"
         val fileRef = storageRef.child(fileName)
@@ -458,35 +509,47 @@ class ProfileFragment : Fragment() {
                 fileRef.downloadUrl.addOnSuccessListener { downloadUrl ->
                     updateProfilePicture(downloadUrl.toString())
                 }.addOnFailureListener { e ->
-                    profilePictureProgressBar.visibility = View.GONE // Hide progress bar
+                    profilePictureProgressBar.visibility = View.GONE
                     Toast.makeText(requireContext(), "Failed to upload image", Toast.LENGTH_SHORT).show()
                 }
             }
             .addOnFailureListener {
-                profilePictureProgressBar.visibility = View.GONE // Hide progress bar
+                profilePictureProgressBar.visibility = View.GONE
                 Toast.makeText(requireContext(), "Image upload failed", Toast.LENGTH_SHORT).show()
             }
     }
 
-    // ✅ Update Firestore with New Profile Picture
     private fun updateProfilePicture(imageUrl: String) {
         val db = FirebaseFirestore.getInstance()
         val petRef = db.collection("pets").document(petId)
 
-        petRef.update("picture", imageUrl) // ✅ Save new URL to Firestore
+        petRef.update("picture", imageUrl)
             .addOnSuccessListener {
                 profilePictureProgressBar.visibility = View.GONE
-                petPicture = imageUrl // ✅ Store new URL locally
+                petPicture = imageUrl
                 petImageView.load(imageUrl) {
                     crossfade(true)
                     placeholder(R.drawable.placeholder)
                     error(R.drawable.placeholder)
                 }
                 Toast.makeText(requireContext(), "Profile picture updated!", Toast.LENGTH_SHORT).show()
+
+                // Update Room with new profile picture
+                val updatedPet = Pet(
+                    id = petId,
+                    name = petName,
+                    breed = petBreed,
+                    weight = petWeight,
+                    color = petColor,
+                    birthDate = petBirthDate,
+                    adoptionDate = petAdoptionDate,
+                    picture = petPicture,
+                    foodImage = foodImage
+                )
+                appDatabase.petDao.insertPet(updatedPet)
             }
             .addOnFailureListener {
                 Toast.makeText(requireContext(), "Failed to update profile picture", Toast.LENGTH_SHORT).show()
             }
     }
-
 }

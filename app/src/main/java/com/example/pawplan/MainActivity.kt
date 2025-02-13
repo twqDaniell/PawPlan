@@ -2,7 +2,6 @@ package com.example.pawplan
 
 import android.content.Context
 import android.os.Bundle
-import android.provider.Settings.Global
 import android.view.View
 import android.widget.ImageButton
 import android.widget.Toast
@@ -18,6 +17,8 @@ import com.example.pawplan.profile.ProfileFragmentDirections
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+// Import your Room database
+import com.example.pawplan.AppDatabase
 
 class MainActivity : AppCompatActivity() {
     lateinit var petNameGlobal: String
@@ -42,38 +43,37 @@ class MainActivity : AppCompatActivity() {
 
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
 
-        // ✅ Setup Navigation Controller properly
+        // Setup Navigation Controller properly
         val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as? NavHostFragment
-        navController = requireNotNull(navHostFragment) { "NavHostFragment not found! Check activity_main.xml for ID: nav_host_fragment" }.navController
+        navController = requireNotNull(navHostFragment) {
+            "NavHostFragment not found! Check activity_main.xml for ID: nav_host_fragment"
+        }.navController
 
-
-
-        // ✅ Setup Bottom Navigation
+        // Setup Bottom Navigation
         bottomNav.setupWithNavController(navController)
 
-        val loadingScreen = findViewById<View>(R.id.loading_screen) // ✅ Reference loading screen
+        val loadingScreen = findViewById<View>(R.id.loading_screen) // Reference loading screen
         val fragmentSection = findViewById<FragmentContainerView>(R.id.nav_host_fragment)
 
-        // ✅ Hide UI elements until user authentication is checked
+        // Hide UI elements until user authentication is checked
         bottomNav.visibility = View.GONE
         loadingScreen.visibility = View.VISIBLE
         fragmentSection.visibility = View.GONE
 
         val auth = FirebaseAuth.getInstance()
-
         val userId = auth.currentUser?.uid
 
         if (userId == null) {
-            // ✅ User not logged in → Navigate to Sign In Fragment
+            // User not logged in → Navigate to Sign In Fragment
             hideBars()
             fragmentSection.visibility = View.VISIBLE
             navigateToSignIn()
         } else {
-            // ✅ User is logged in → Fetch User & Pet Data
+            // User is logged in → Fetch User & Pet Data
             fetchUserData(userId, loadingScreen, bottomNav)
         }
 
-        // ✅ Logout Button Functionality
+        // Logout Button Functionality
         findViewById<ImageButton>(R.id.logout_button)?.setOnClickListener {
             handleLogout()
         }
@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ✅ Fetch User & Pet Data from Firestore and Navigate with SafeArgs
+    // Fetch User & Pet Data from Firestore and Navigate with SafeArgs
     private fun fetchUserData(userId: String, loadingScreen: View, bottomNav: BottomNavigationView) {
         val db = FirebaseFirestore.getInstance()
         val userRef = db.collection("users").document(userId)
@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity() {
             userNameGlobal = userName
             phoneNumberGlobal = phoneNumber
 
-                petRef.get().addOnSuccessListener { petDocs ->
+            petRef.get().addOnSuccessListener { petDocs ->
                 if (petDocs.isEmpty) {
                     navigateToSignIn() // No pet found → Go to login
                     return@addOnSuccessListener
@@ -135,18 +135,18 @@ class MainActivity : AppCompatActivity() {
                 val petBreed = petDoc.getString("petBreed") ?: "Unknown Breed"
                 val petWeight = petDoc.getLong("petWeight")?.toInt() ?: 0
                 val petColor = petDoc.getString("petColor") ?: "Unknown Color"
-                val petBirthDate = petDoc.getString("petBirthDate") ?: "Unknown Birth Date"
-                val petAdoptionDate = petDoc.getString("petAdoptionDate") ?: "Unknown Adoption Date"
+                val petBirthDate = petDoc.getDate("petBirthDate") ?: "Unknown Birth Date"
+                val petAdoptionDate = petDoc.getDate("petAdoptionDate") ?: "Unknown Adoption Date"
                 val petPicture = petDoc.getString("picture") ?: ""
                 val foodImage = petDoc.getString("foodImage") ?: ""
                 val vetId = petDoc.getString("vetId") ?: ""
                 val petId = petDoc.id // Unique pet document ID
 
-                petNameGlobal = petDoc.getString("petName") ?: "No Pet Name"
-                petBreedGlobal = petDoc.getString("petBreed") ?: "Unknown Breed"
-                petWeightGlobal = petDoc.getLong("petWeight")?.toInt() ?: 0
-                vetIdGlobal = petDoc.getString("vetId") ?: ""
-                petIdGlobal = petDoc.id
+                petNameGlobal = petName
+                petBreedGlobal = petBreed
+                petWeightGlobal = petWeight
+                vetIdGlobal = vetId
+                petIdGlobal = petId
                 petPictureGlobal = petPicture
                 petTypeGlobal = petType
                 petColorGlobal = petColor
@@ -154,17 +154,16 @@ class MainActivity : AppCompatActivity() {
                 petAdoptionDateGlobal = petAdoptionDate.toString()
                 foodImageGlobal = foodImage
 
-                // ✅ Navigate to ProfileFragment with SafeArgs
+                // Navigate to ProfileFragment with SafeArgs
                 val action = ProfileFragmentDirections
                     .actionGlobalProfileFragment(
                         userName, phoneNumber, petName, petType, petBreed,
                         petWeight.toString(), petColor, petBirthDate.toString(), petAdoptionDate.toString(), foodImage, vetId, petId, petPicture
                     )
 
-                // ✅ Ensure we navigate only if we're NOT already there
+                // Ensure we navigate only if we're NOT already there
                 if (navController.currentDestination?.id != R.id.profileFragment) {
                     val fragmentSection = findViewById<FragmentContainerView>(R.id.nav_host_fragment)
-
                     loadingScreen.visibility = View.GONE
                     fragmentSection.visibility = View.VISIBLE
                     showBars()
@@ -181,21 +180,18 @@ class MainActivity : AppCompatActivity() {
     private fun navigateToHealthFragment() {
         val action = HealthFragmentDirections
             .actionGlobalHealthFragment(petNameGlobal, petBreedGlobal, petWeightGlobal, vetIdGlobal, petIdGlobal)
-
         navController.navigate(action)
     }
 
     private fun navigateToMissingFragment() {
         val action = MissingFragmentDirections
             .actionGlobalMissingFragment(petIdGlobal)
-
         navController.navigate(action)
     }
 
     private fun navigateToFoodFragment() {
         val action = FoodFragmentDirections
             .actionGlobalFoodFragment(petIdGlobal, petNameGlobal, foodImageGlobal)
-
         navController.navigate(action)
     }
 
@@ -206,11 +202,10 @@ class MainActivity : AppCompatActivity() {
                 petWeightGlobal.toString(), petColorGlobal, petBirthDateGlobal, petAdoptionDateGlobal, foodImageGlobal,
                 vetIdGlobal, petIdGlobal, petPictureGlobal
             )
-
         navController.navigate(action)
     }
 
-    // ✅ Navigate to Sign In Fragment
+    // Navigate to Sign In Fragment
     private fun navigateToSignIn() {
         if (navController.currentDestination?.id != R.id.signInFormFragment) {
             navController.navigate(R.id.signInFormFragment)
@@ -218,9 +213,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleLogout() {
-        FirebaseAuth.getInstance().signOut() // Log out from Firebase
+        // Clear Room database before logging out
+        val appDatabase = AppDatabase(this)
+        appDatabase.userDao.clearUsers()
+        appDatabase.petDao.clearPets()
 
-        // Clear user data
+        // Log out from Firebase
+        FirebaseAuth.getInstance().signOut()
+
+        // Clear user data from SharedPreferences
         val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         sharedPreferences.edit().clear().apply()
 
@@ -235,7 +236,6 @@ class MainActivity : AppCompatActivity() {
     fun showBars() {
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.top_bar)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-
         toolbar.visibility = View.VISIBLE
         bottomNav.visibility = View.VISIBLE
     }
@@ -243,7 +243,6 @@ class MainActivity : AppCompatActivity() {
     fun hideBars() {
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.top_bar)
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottom_navigation)
-
         toolbar.visibility = View.GONE
         bottomNav.visibility = View.GONE
     }

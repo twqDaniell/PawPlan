@@ -101,7 +101,7 @@ class SignInFormFragment : Fragment() {
 
                             val action = SignInFormFragmentDirections
                                 .actionSignInFormFragmentToSignInCodeFragment(
-                                    phoneNumber, verificationId
+                                    "+972" + phoneNumber.substring(1), verificationId
                                 )
                             findNavController().navigate(action)
 
