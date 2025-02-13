@@ -1,7 +1,6 @@
 package com.example.pawplan.login
 
 import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -17,13 +16,12 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.example.pawplan.MainActivity
 import com.example.pawplan.R
-import com.example.pawplan.foods.FoodFragmentArgs
 import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 // Import Room database and models
-import com.example.pawplan.AppDatabase
+import com.example.pawplan.Dao.AppDatabase
 import com.example.pawplan.models.User
 import com.example.pawplan.models.Pet
 

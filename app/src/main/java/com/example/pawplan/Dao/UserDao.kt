@@ -1,4 +1,4 @@
-package com.example.pawplan
+package com.example.pawplan.Dao
 
 import com.example.pawplan.models.User
 

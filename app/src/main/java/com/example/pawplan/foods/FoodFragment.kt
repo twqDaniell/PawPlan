@@ -19,12 +19,9 @@ import com.example.pawplan.R
 import com.example.pawplan.adapters.AllergiesAdapter
 import com.example.pawplan.adapters.OnAllergyDeletedListener
 import com.example.pawplan.models.Allergy
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
-import java.util.*
-import com.example.pawplan.AppDatabase
+import com.example.pawplan.Dao.AppDatabase
 import com.example.pawplan.uploadImageToFirebase
 
 class FoodFragment : Fragment(), OnAllergyDeletedListener {

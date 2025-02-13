@@ -1,7 +1,6 @@
 package com.example.pawplan.health
 
 import android.app.AlertDialog
-import android.app.DatePickerDialog
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -17,7 +16,7 @@ import com.example.pawplan.R
 import com.example.pawplan.adapters.VetVisitAdapter
 import com.example.pawplan.models.Vet
 import com.example.pawplan.models.VetVisit
-import com.example.pawplan.AppDatabase
+import com.example.pawplan.Dao.AppDatabase
 import com.example.pawplan.formatDateString
 import com.example.pawplan.showDatePickerDialog
 import com.google.firebase.firestore.FirebaseFirestore

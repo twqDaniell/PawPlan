@@ -2,7 +2,6 @@ package com.example.pawplan.profile
 
 import android.app.Activity
 import android.app.AlertDialog
-import android.app.DatePickerDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -22,21 +21,18 @@ import com.example.pawplan.externalAPI.RetrofitClient
 import com.example.pawplan.models.BreedsResponse
 import com.example.pawplan.models.CatBreed
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
-import java.text.SimpleDateFormat
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.*
-import com.example.pawplan.AppDatabase
+import com.example.pawplan.Dao.AppDatabase
 import com.example.pawplan.formatDateString
 import com.example.pawplan.models.Pet
 import com.example.pawplan.models.Memory
 import com.example.pawplan.showDatePickerDialog
 import com.example.pawplan.uploadImageToFirebase
 import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.MaterialAutoCompleteTextView
 
 class ProfileFragment : Fragment() {
     private lateinit var userName: String

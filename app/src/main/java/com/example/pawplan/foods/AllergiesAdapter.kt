@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.pawplan.AppDatabase
+import com.example.pawplan.Dao.AppDatabase
 import com.example.pawplan.R
 import com.example.pawplan.models.Allergy
 import com.google.firebase.firestore.FirebaseFirestore
