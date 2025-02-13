@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingRight="16dp"
+    android:paddingLeft="16dp"
+    android:paddingTop="16dp"
+    android:background="@color/white"
+    tools:context=".health.HealthFragment">
+
+    <!-- 📌 Title & Illustration Section -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- 📌 Title -->
+        <TextView
+            android:id="@+id/healthTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Health is the most important!"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/healthIllustration"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginEnd="8dp"/>
+
+        <!-- 📌 Subtitle -->
+        <TextView
+            android:id="@+id/healthSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Stay in touch with your pet's health records."
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/healthIllustration"
+            app:layout_constraintTop_toBottomOf="@id/healthTitle"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp"/>
+
+        <!-- 📌 Illustration (Right Side) -->
+        <ImageView
+            android:id="@+id/healthIllustration"
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/health_illustration"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- 📌 Add Vet Section (if no vetId) -->
+    <LinearLayout
+        android:id="@+id/healthStats"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@+id/layoutHeader"
+        android:layout_marginTop="20dp">
+
+            <LinearLayout
+                android:id="@+id/addVetSection"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp"
+                android:gravity="center"
+                android:layout_marginTop="12dp">
+
+        <TextView
+            android:text="Add Vet"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"/>
+
+        <ImageButton
+            android:id="@+id/addVetButton"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:background="@drawable/circle_background"
+            android:src="@drawable/ic_add_pink"
+            android:contentDescription="Add Vet"/>
+
+            </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/vetDets"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            app:layout_constraintTop_toTopOf="parent"
+            >
+
+            <!-- 📌 Vet Section -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:id="@+id/vetSection"
+                android:layout_marginBottom="5dp"
+                android:layout_marginTop="12dp">
+
+                <!-- Vet Icon -->
+                <ImageView
+                    android:id="@+id/vetIcon"
+                    android:layout_gravity="center_vertical"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_vet"
+                    android:contentDescription="Vet Icon"/>
+
+                <!-- Vet Details -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:layout_marginStart="8dp">
+
+                    <TextView
+                        android:id="@+id/vetName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Vet Name"
+                        android:textSize="18sp"
+                        android:textStyle="bold"/>
+
+                    <TextView
+                        android:id="@+id/vetPhone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0700000000"
+                        android:textSize="16sp"
+                        android:textColor="@color/primaryColor" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/editVetButton"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_edit"
+                    android:layout_marginLeft="10dp"
+                    android:layout_gravity="center"
+                    android:contentDescription="Add Vet"/>
+            </LinearLayout>
+
+        <!-- Weight -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_weight"
+                    android:contentDescription="Weight Icon"/>
+
+                <TextView
+                    android:text="Last Weight Check: "
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"/>
+
+                <TextView
+                    android:id="@+id/weightText"
+                    android:text="-"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"/>
+            </LinearLayout>
+
+            <!-- Last Visit -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_calendar"
+                    android:contentDescription="Calendar Icon"/>
+
+                <TextView
+                    android:text="Last Visit: "
+                    android:textSize="16sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textStyle="bold"
+                    android:layout_marginStart="8dp"/>
+
+                <TextView
+                    android:id="@+id/lastVisitText"
+                    android:text="-"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"/>
+            </LinearLayout>
+
+            <!-- Next Visit -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_calendar"
+                    android:contentDescription="Calendar Icon"/>
+
+                <TextView
+                    android:text="Next Visit: "
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"/>
+
+                <TextView
+                    android:id="@+id/nextVisitText"
+                    android:text="-"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"/>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/visitsHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/healthStats"
+        android:layout_marginTop="16dp">
+
+        <TextView
+            android:id="@+id/vetVisitsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Vet Visits"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <ImageButton
+            android:id="@+id/addVisitButton"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Add Visit"
+            android:src="@drawable/ic_add"
+            app:tint="@color/primaryColor"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/visitsHeader"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/vetVisitsRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/visitsHeader"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"/>
+
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

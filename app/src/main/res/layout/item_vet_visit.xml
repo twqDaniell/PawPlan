@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="12dp"
+    >
+
+    <TextView
+        android:id="@+id/visitTopicText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="Vaccination"
+        android:textSize="16sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/visitDateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="21/02/2025"
+        android:textSize="16sp"/>
+
+    <ImageButton
+        android:id="@+id/deleteVetVisitButton"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_delete"
+        android:background="@null"
+        android:layout_marginLeft="5dp"
+        android:contentDescription="Delete Allergy"/>
+</LinearLayout>
