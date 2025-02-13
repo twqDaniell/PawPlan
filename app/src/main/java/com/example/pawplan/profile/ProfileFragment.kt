@@ -35,6 +35,7 @@ import java.util.*
 // Room imports
 import com.example.pawplan.AppDatabase
 import com.example.pawplan.models.Pet
+import com.example.pawplan.models.Memory
 
 class ProfileFragment : Fragment() {
 
@@ -170,28 +171,21 @@ class ProfileFragment : Fragment() {
             showEditProfileDialog()
         }
 
-        // Fetch Memories from Firestore
+        // Fetch Memories from Room instead of Firestore
         fetchMemories()
 
         return view
     }
 
+    // Fetch memories from Room database for this pet
     private fun fetchMemories() {
-        val db = FirebaseFirestore.getInstance()
-        db.collection("memories").whereEqualTo("petId", petId).get()
-            .addOnSuccessListener { documents ->
-                memoryList.clear() // Clear previous list
-                for (document in documents) {
-                    val pictureUrl = document.getString("picture")
-                    if (pictureUrl != null) {
-                        memoryList.add(pictureUrl)
-                    }
-                }
-                memoryAdapter.notifyDataSetChanged()
-            }
-            .addOnFailureListener { exception ->
-                exception.printStackTrace()
-            }
+        // Assumes you have a Memory entity and memoryDao.getMemoriesByPetId(petId: String): List<Memory>
+        val memories = appDatabase.memoryDao.getMemoriesByPetId(petId)
+        memoryList.clear()
+        for (memory in memories) {
+            memoryList.add(memory.picture)
+        }
+        memoryAdapter.notifyDataSetChanged()
     }
 
     // Open Image Picker
@@ -225,7 +219,8 @@ class ProfileFragment : Fragment() {
         fileRef.putFile(imageUri)
             .addOnSuccessListener {
                 fileRef.downloadUrl.addOnSuccessListener { downloadUrl ->
-                    saveMemoryToFirestore(downloadUrl.toString())
+                    // Instead of saving to Firestore, save memory to Room
+                    saveMemoryToRoom(downloadUrl.toString())
                 }.addOnFailureListener {
                     uploadProgressBar.visibility = View.GONE
                     Toast.makeText(requireContext(), "Failed to upload memory", Toast.LENGTH_SHORT).show()
@@ -237,25 +232,19 @@ class ProfileFragment : Fragment() {
             }
     }
 
-    // Save Image URL to Firestore with Loader
-    private fun saveMemoryToFirestore(imageUrl: String) {
-        val db = FirebaseFirestore.getInstance()
-        val memoryData = hashMapOf(
-            "petId" to petId,
-            "picture" to imageUrl
+    // Save memory image URL to Room database and update UI
+    private fun saveMemoryToRoom(imageUrl: String) {
+        // Create a new Memory object (assumes Memory entity has id, petId, picture)
+        val memory = Memory(
+            id = UUID.randomUUID().toString(),
+            petId = petId,
+            picture = imageUrl
         )
-
-        db.collection("memories").add(memoryData)
-            .addOnSuccessListener {
-                uploadProgressBar.visibility = View.GONE
-                memoryList.add(imageUrl)
-                memoryAdapter.notifyDataSetChanged()
-                Toast.makeText(requireContext(), "Memory added!", Toast.LENGTH_SHORT).show()
-            }
-            .addOnFailureListener {
-                uploadProgressBar.visibility = View.GONE
-                Toast.makeText(requireContext(), "Failed to save memory", Toast.LENGTH_SHORT).show()
-            }
+        appDatabase.memoryDao.insertMemory(memory)
+        uploadProgressBar.visibility = View.GONE
+        memoryList.add(imageUrl)
+        memoryAdapter.notifyDataSetChanged()
+        Toast.makeText(requireContext(), "Memory added!", Toast.LENGTH_SHORT).show()
     }
 
     private fun formatDate(dateString: String): String {

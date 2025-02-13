@@ -5,8 +5,9 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.example.pawplan.models.Pet
 import com.example.pawplan.models.User
+import com.example.pawplan.models.Memory
 
-class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", null, 1) {
+class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", null, 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -34,11 +35,23 @@ class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", nu
             )
             """
         )
+
+        // Create memories table
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS memories (
+                id TEXT PRIMARY KEY,
+                petId TEXT NOT NULL,
+                picture TEXT NOT NULL
+            )
+            """
+        )
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         db.execSQL("DROP TABLE IF EXISTS users")
         db.execSQL("DROP TABLE IF EXISTS pets")
+        db.execSQL("DROP TABLE IF EXISTS memories")
         onCreate(db)
     }
 
@@ -49,7 +62,6 @@ class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", nu
                 arrayOf(user.id, user.name, user.phoneNumber)
             )
         }
-
         override fun getUser(): User? {
             val cursor = readableDatabase.rawQuery("SELECT * FROM users LIMIT 1", null)
             return if (cursor.moveToFirst()) {
@@ -60,7 +72,6 @@ class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", nu
                 )
             } else null
         }
-
         override fun clearUsers() {
             writableDatabase.execSQL("DELETE FROM users")
         }
@@ -76,7 +87,6 @@ class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", nu
                 )
             )
         }
-
         override fun getPet(): Pet? {
             val cursor = readableDatabase.rawQuery("SELECT * FROM pets LIMIT 1", null)
             return if (cursor.moveToFirst()) {
@@ -93,9 +103,31 @@ class AppDatabase(context: Context) : SQLiteOpenHelper(context, "pawplan_db", nu
                 )
             } else null
         }
-
         override fun clearPets() {
             writableDatabase.execSQL("DELETE FROM pets")
+        }
+    }
+
+    val memoryDao = object : MemoryDao {
+        override fun insertMemory(memory: Memory) {
+            writableDatabase.execSQL(
+                "INSERT OR REPLACE INTO memories (id, petId, picture) VALUES (?, ?, ?)",
+                arrayOf(memory.id, memory.petId, memory.picture)
+            )
+        }
+        override fun getMemoriesByPetId(petId: String): List<Memory> {
+            val cursor = readableDatabase.rawQuery("SELECT * FROM memories WHERE petId = ?", arrayOf(petId))
+            val list = mutableListOf<Memory>()
+            if (cursor.moveToFirst()) {
+                do {
+                    list.add(Memory(cursor.getString(0), cursor.getString(1), cursor.getString(2)))
+                } while(cursor.moveToNext())
+            }
+            cursor.close()
+            return list
+        }
+        override fun clearMemories() {
+            writableDatabase.execSQL("DELETE FROM memories")
         }
     }
 }
