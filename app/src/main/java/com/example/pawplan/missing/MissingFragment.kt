@@ -347,8 +347,8 @@ class MissingFragment : Fragment() {
                         .add(missingPet)
                         .addOnSuccessListener {
                             fetchMissingPets()
-                            Toast.makeText(requireContext(), "Missing pet added!", Toast.LENGTH_SHORT).show()
-                            dialog.dismiss() // ✅ Only close dialog when done
+                            Toast.makeText(requireContext(), "Post uploaded successfully, Hope we help you!", Toast.LENGTH_SHORT).show()
+                            dialog.dismiss()
                         }
                         .addOnFailureListener {
                             saveButton.isEnabled = true
