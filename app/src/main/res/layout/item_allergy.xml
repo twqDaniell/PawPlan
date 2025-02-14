@@ -3,8 +3,14 @@
     android:layout_height="wrap_content"
     android:padding="12dp"
     android:orientation="horizontal"
-    android:background="@android:color/white"
+    android:background="@drawable/top_border"
     android:gravity="center_vertical">
+
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_wrong"
+        android:layout_marginRight="5dp"/>
 
     <TextView
         android:id="@+id/allergyName"
