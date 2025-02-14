@@ -52,6 +52,7 @@ class MissingPetAdapter(
         private val ownerDetails: TextView = view.findViewById(R.id.ownerDetails)
         private val editButton: ImageButton = view.findViewById(R.id.editPostButton)
         private val deleteButton: ImageButton = view.findViewById(R.id.deletePostButton)
+//        private var ownerId: String = ""
 
         fun bind(missingPet: MissingPet) {
             petImage.load(missingPet.picture)
@@ -67,6 +68,13 @@ class MissingPetAdapter(
                     petName.text = name
                     petDetails.text = "$color $breed"
                     val ownerId = doc.getString("ownerId") ?: ""
+                    if (ownerId == FirebaseAuth.getInstance().currentUser?.uid) {
+                        editButton.visibility = View.VISIBLE
+                        deleteButton.visibility = View.VISIBLE
+                    } else {
+                        editButton.visibility = View.GONE
+                        deleteButton.visibility = View.GONE
+                    }
                     if (ownerId.isNotEmpty()) {
                         FirebaseFirestore.getInstance().collection("users")
                             .document(ownerId)
@@ -80,13 +88,7 @@ class MissingPetAdapter(
                         ownerDetails.text = "Unknown owner"
                     }
                 }
-            if (missingPet.ownerId == FirebaseAuth.getInstance().currentUser?.uid) {
-                editButton.visibility = View.VISIBLE
-                deleteButton.visibility = View.VISIBLE
-            } else {
-                editButton.visibility = View.GONE
-                deleteButton.visibility = View.GONE
-            }
+
             editButton.setOnClickListener { onEditClick(missingPet) }
             deleteButton.setOnClickListener { onDeleteClick(missingPet) }
         }
